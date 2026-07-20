@@ -2,23 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../core/providers/app_providers.dart';
-import '../../core/theme/app_colors.dart';
-import '../../data/repositories/journey_history_repository_impl.dart';
-import '../../domain/entities/journey_entity.dart';
-import '../../domain/repositories/journey_history_repository.dart';
-import '../../core/widgets/app_state_view.dart';
-import '../../core/widgets/glass_card.dart';
-
-final journeyHistoryRepositoryProvider = Provider<JourneyHistoryRepository>((ref) {
-  return JourneyHistoryRepositoryImpl(ref.watch(firestoreProvider));
-});
-
-final journeyHistoryStreamProvider = StreamProvider.autoDispose<List<JourneyEntity>>((ref) {
-  final uid = ref.watch(firebaseAuthProvider).currentUser?.uid;
-  if (uid == null) return const Stream.empty();
-  return ref.watch(journeyHistoryRepositoryProvider).watchHistory(uid);
-});
+import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/app_state_view.dart';
+import '../../../core/widgets/glass_card.dart';
+import '../domain/entities/journey_entity.dart';
+import 'providers/journey_history_providers.dart';
 
 class JourneyHistoryScreen extends ConsumerWidget {
   const JourneyHistoryScreen({super.key});

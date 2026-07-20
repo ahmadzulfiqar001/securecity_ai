@@ -8,8 +8,8 @@ import '../../core/theme/app_colors.dart';
 import '../../data/repositories/nearby_services_repository_impl.dart';
 import '../../domain/entities/nearby_service_entity.dart';
 import '../../domain/repositories/nearby_services_repository.dart';
-import '../widgets/app_state_view.dart';
-import '../widgets/glass_card.dart';
+import '../../core/widgets/app_state_view.dart';
+import '../../core/widgets/glass_card.dart';
 
 final nearbyServicesRepositoryProvider = Provider<NearbyServicesRepository>((ref) {
   return NearbyServicesRepositoryImpl(ref.watch(firestoreProvider));

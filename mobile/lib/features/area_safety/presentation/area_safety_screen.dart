@@ -2,22 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
-import '../../core/constants/app_constants.dart';
-import '../../core/providers/app_providers.dart';
-import '../../core/theme/app_colors.dart';
-import '../../data/repositories/area_safety_repository_impl.dart';
-import '../../domain/entities/area_safety_entity.dart';
-import '../../domain/repositories/area_safety_repository.dart';
-import '../../core/widgets/app_state_view.dart';
-import '../../core/widgets/glass_card.dart';
-
-final areaSafetyRepositoryProvider = Provider<AreaSafetyRepository>((ref) {
-  return AreaSafetyRepositoryImpl(ref.watch(firestoreProvider));
-});
-
-final areaSafetyStreamProvider = StreamProvider.autoDispose<List<AreaSafetyEntity>>((ref) {
-  return ref.watch(areaSafetyRepositoryProvider).watchAll();
-});
+import '../../../core/constants/app_constants.dart';
+import '../../../core/providers/app_providers.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/app_state_view.dart';
+import '../../../core/widgets/glass_card.dart';
+import '../domain/entities/area_safety_entity.dart';
+import 'providers/area_safety_providers.dart';
 
 class AreaSafetyScreen extends ConsumerWidget {
   const AreaSafetyScreen({super.key});

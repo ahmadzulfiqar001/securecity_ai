@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/providers/geofence_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
-import '../auth/auth_notifier.dart';
+import '../../features/auth/presentation/auth_notifier.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});

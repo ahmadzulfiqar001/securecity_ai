@@ -7,10 +7,10 @@ import '../../core/constants/app_constants.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/providers/theme_provider.dart';
 import '../../core/theme/app_colors.dart';
-import '../auth/auth_notifier.dart';
-import '../widgets/danger_button.dart';
-import '../widgets/glass_card.dart';
-import '../widgets/section_header.dart';
+import '../../features/auth/presentation/auth_notifier.dart';
+import '../../core/widgets/danger_button.dart';
+import '../../core/widgets/glass_card.dart';
+import '../../core/widgets/section_header.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
