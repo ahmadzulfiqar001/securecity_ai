@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "482903082413",
+    "project_id": "city-ai-968bd",
+    "storage_bucket": "city-ai-968bd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:482903082413:android:123acbc327d48f08768d24",
+        "android_client_info": {
+          "package_name": "ai.securecity.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyClZRSycAODb-xFhRzSHC2SaEEfMhaBpWc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

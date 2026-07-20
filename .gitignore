@@ -1,0 +1,41 @@
+# ============================================================
+# SecureCity AI — Root .gitignore
+# ============================================================
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+secrets/
+*firebase_credentials*.json
+*service-account*.json
+
+# Firebase
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+ui-debug.log
+
+# Cloud Functions (Node.js)
+functions/node_modules/
+functions/lib/
+functions/npm-audit.json
+
+# Python (ai_engine / cv_engine)
+**/__pycache__/
+*.pyc
+*.pyo
+**/.pytest_cache/
+**/*.egg-info/
+backend/*/coverage-*.xml
+backend/*/junit-*.xml
+backend/*/htmlcov/
+
+# Docker
+*.pid
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

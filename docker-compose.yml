@@ -1,0 +1,504 @@
+version: "3.9"
+
+# ============================================================
+# SecureCity AI — Production Docker Compose
+# Core app data/auth/notifications live in Firebase (Firestore,
+# Auth, Storage, FCM, Cloud Functions) — not in this stack.
+# This stack only runs the Python AI/CV inference microservices
+# that Firebase Cloud Functions cannot host (YOLO, ML models),
+# plus their supporting cache and observability services.
+#
+# MongoDB here is scoped to ai_engine/cv_engine's own internal ML
+# operational data (model registry, training runs, inference logs,
+# and a synced incidents-geo cache for KDE heatmap queries) — it is
+# NOT app data storage. Users/Incidents/Notifications/etc. live in
+# Firestore; see backend/docs/mongodb-schema.md for what's actually
+# in here and why.
+# ============================================================
+
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-restart-policy: &restart-unless-stopped
+  restart: unless-stopped
+
+services:
+
+  # ─────────────────────────────────────────────
+  # Redis — cache / task queue for ai_engine & cv_engine
+  # ─────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: securecity_redis
+    <<: *restart-unless-stopped
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required — see .env.example}
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --save 60 1
+      --save 300 100
+    volumes:
+      - redis_data:/data
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:?REDIS_PASSWORD is required — see .env.example}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - securecity_net
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
+
+  # ─────────────────────────────────────────────
+  # MongoDB — ai_engine/cv_engine internal ML data only
+  # (model registry, training runs, inference logs, incidents-geo
+  # cache). Not exposed to the app tier; only these two services
+  # and this compose network can reach it.
+  # ─────────────────────────────────────────────
+  mongodb:
+    image: mongo:7
+    container_name: securecity_mongodb
+    <<: *restart-unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-mongoadmin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?MONGO_ROOT_PASSWORD is required — see .env.example}
+      MONGO_INITDB_DATABASE: ${MONGO_DB:-securecity_ml}
+      # Consumed by infrastructure/mongodb/init/init-app-user.js to create
+      # a least-privilege readWrite user for ai_engine/cv_engine, instead
+      # of those services using the root credentials above. NOTE: init
+      # scripts only run against a FRESH (empty) mongo_data volume — see
+      # that script's header comment for the manual one-time migration
+      # path on an existing deployment.
+      MONGO_APP_USER: ${MONGO_APP_USER:-securecity_ml_app}
+      MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD:?MONGO_APP_PASSWORD is required — see .env.example}
+    volumes:
+      - mongo_data:/data/db
+      - ./infrastructure/mongodb/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "127.0.0.1:27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok", "--username", "${MONGO_ROOT_USER:-mongoadmin}", "--password", "${MONGO_ROOT_PASSWORD:?MONGO_ROOT_PASSWORD is required — see .env.example}", "--authenticationDatabase", "admin"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    networks:
+      - securecity_net
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 256M
+
+  # ─────────────────────────────────────────────
+  # MongoDB Backup — scheduled mongodump via infrastructure/mongodb/backup.sh
+  # (previously that script existed but nothing ever ran it — see HIGH-05
+  # in the architecture audit). Uses the same official `mongo` image as the
+  # `mongodb` service so mongodump's version matches the server's.
+  # ─────────────────────────────────────────────
+  mongodb-backup:
+    image: mongo:7
+    container_name: securecity_mongodb_backup
+    <<: *restart-unless-stopped
+    environment:
+      MONGO_URL: mongodb://${MONGO_ROOT_USER:-mongoadmin}:${MONGO_ROOT_PASSWORD:?MONGO_ROOT_PASSWORD is required — see .env.example}@mongodb:27017/${MONGO_DB:-securecity_ml}?authSource=admin
+      BACKUP_DEST: /backups
+      RETENTION_DAYS: ${MONGO_BACKUP_RETENTION_DAYS:-14}
+    volumes:
+      - ./infrastructure/mongodb/backup.sh:/scripts/backup.sh:ro
+      - mongodb_backups:/backups
+    entrypoint: >
+      /bin/sh -c "trap exit TERM;
+      while :; do
+        /bin/bash /scripts/backup.sh;
+        sleep 24h & wait $${!};
+      done"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - securecity_net
+    logging: *default-logging
+
+  # ─────────────────────────────────────────────
+  # AI Engine — ML Microservice (crime prediction, safety scoring)
+  # Writes app results back to Firestore via Firebase Admin SDK;
+  # writes its own ML operational data (model registry, training
+  # runs, inference logs, incidents-geo cache) to MongoDB.
+  # ─────────────────────────────────────────────
+  ai_engine:
+    build:
+      # Context is the parent backend/ dir so the Dockerfile can COPY
+      # backend/shared/ (Firebase auth, shared with cv_engine) alongside
+      # backend/ai_engine/ — see backend/ai_engine/Dockerfile's header.
+      context: ./backend
+      dockerfile: ai_engine/Dockerfile
+      target: production
+    # Named so celery-worker/celery-beat below can reuse this exact image
+    # (same code, same dependencies) instead of duplicating the build.
+    image: securecity_ai_engine:latest
+    container_name: securecity_ai_engine
+    <<: *restart-unless-stopped
+    env_file:
+      - .env
+    environment:
+      REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required — see .env.example}@redis:6379/1
+      # Scoped readWrite user (see infrastructure/mongodb/init/init-app-user.js)
+      # rather than the cluster root credentials used by mongodb-backup.
+      MONGODB_URL: mongodb://${MONGO_APP_USER:-securecity_ml_app}:${MONGO_APP_PASSWORD:?MONGO_APP_PASSWORD is required — see .env.example}@mongodb:27017/${MONGO_DB:-securecity_ml}?authSource=${MONGO_DB:-securecity_ml}
+      FIREBASE_CREDENTIALS_PATH: /run/secrets/firebase_credentials.json
+      MODEL_PATH: /app/models/saved
+      ENVIRONMENT: production
+    ports:
+      - "8001:8001"
+    depends_on:
+      redis:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    volumes:
+      - ai_models:/app/models/saved
+      - ${FIREBASE_CREDENTIALS_HOST_PATH:-./secrets/firebase_credentials.json}:/run/secrets/firebase_credentials.json:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 90s
+    networks:
+      - securecity_net
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 1G
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # ─────────────────────────────────────────────
+  # Celery Worker — runs ai_engine's scheduled ML retraining tasks
+  # (app/tasks/retrain_crime_model.py, retrain_traffic_model.py — already
+  # declared @shared_task functions with nothing to bind to until
+  # app/celery_app.py; see HIGH-09 in the architecture audit). Reuses the
+  # ai_engine image so the task code and its dependencies stay identical.
+  # ─────────────────────────────────────────────
+  celery-worker:
+    image: securecity_ai_engine:latest
+    container_name: securecity_celery_worker
+    <<: *restart-unless-stopped
+    env_file:
+      - .env
+    environment:
+      REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required — see .env.example}@redis:6379/1
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required — see .env.example}@redis:6379/3
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required — see .env.example}@redis:6379/4
+      MONGODB_URL: mongodb://${MONGO_APP_USER:-securecity_ml_app}:${MONGO_APP_PASSWORD:?MONGO_APP_PASSWORD is required — see .env.example}@mongodb:27017/${MONGO_DB:-securecity_ml}?authSource=${MONGO_DB:-securecity_ml}
+      MODEL_PATH: /app/models/saved
+      ENVIRONMENT: production
+    command: celery -A app.celery_app:celery_app worker --loglevel=info --concurrency=2
+    depends_on:
+      redis:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    volumes:
+      - ai_models:/app/models/saved
+    networks:
+      - securecity_net
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+
+  # ─────────────────────────────────────────────
+  # Celery Beat — cron-schedules the retraining tasks above
+  # (daily crontab, see app/celery_app.py's beat_schedule).
+  # ─────────────────────────────────────────────
+  celery-beat:
+    image: securecity_ai_engine:latest
+    container_name: securecity_celery_beat
+    <<: *restart-unless-stopped
+    env_file:
+      - .env
+    environment:
+      REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required — see .env.example}@redis:6379/1
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required — see .env.example}@redis:6379/3
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required — see .env.example}@redis:6379/4
+      MONGODB_URL: mongodb://${MONGO_APP_USER:-securecity_ml_app}:${MONGO_APP_PASSWORD:?MONGO_APP_PASSWORD is required — see .env.example}@mongodb:27017/${MONGO_DB:-securecity_ml}?authSource=${MONGO_DB:-securecity_ml}
+      ENVIRONMENT: production
+    command: celery -A app.celery_app:celery_app beat --loglevel=info
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - securecity_net
+    logging: *default-logging
+
+  # ─────────────────────────────────────────────
+  # CV Engine — Computer Vision Microservice (YOLO/OpenCV)
+  # Writes detection events back to Firestore via Firebase Admin SDK.
+  # ─────────────────────────────────────────────
+  cv_engine:
+    build:
+      # Context is the parent backend/ dir so the Dockerfile can COPY
+      # backend/shared/ (Firebase auth, shared with ai_engine) alongside
+      # backend/cv_engine/ — see backend/cv_engine/Dockerfile's header.
+      context: ./backend
+      dockerfile: cv_engine/Dockerfile
+      target: production
+    container_name: securecity_cv_engine
+    <<: *restart-unless-stopped
+    env_file:
+      - .env
+    environment:
+      REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required — see .env.example}@redis:6379/2
+      # Scoped readWrite user (see infrastructure/mongodb/init/init-app-user.js)
+      # rather than the cluster root credentials used by mongodb-backup.
+      MONGODB_URL: mongodb://${MONGO_APP_USER:-securecity_ml_app}:${MONGO_APP_PASSWORD:?MONGO_APP_PASSWORD is required — see .env.example}@mongodb:27017/${MONGO_DB:-securecity_ml}?authSource=${MONGO_DB:-securecity_ml}
+      FIREBASE_CREDENTIALS_PATH: /run/secrets/firebase_credentials.json
+      ENVIRONMENT: production
+    ports:
+      - "8002:8002"
+    depends_on:
+      redis:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    volumes:
+      - cv_models:/app/models
+      - ${FIREBASE_CREDENTIALS_HOST_PATH:-./secrets/firebase_credentials.json}:/run/secrets/firebase_credentials.json:ro
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 120s
+    networks:
+      - securecity_net
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 1G
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # ─────────────────────────────────────────────
+  # Nginx — Reverse Proxy + SSL Termination for AI/CV APIs
+  # ─────────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: securecity_nginx
+    <<: *restart-unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      ai_engine:
+        condition: service_healthy
+      cv_engine:
+        condition: service_healthy
+    volumes:
+      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infrastructure/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./infrastructure/nginx/ssl:/etc/nginx/ssl:ro
+      - nginx_cache:/var/cache/nginx
+      - letsencrypt_certs:/etc/letsencrypt:ro
+      - letsencrypt_www:/var/www/certbot:ro
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - securecity_net
+    logging: *default-logging
+
+  # ─────────────────────────────────────────────
+  # Certbot — SSL Certificate Management
+  # ─────────────────────────────────────────────
+  certbot:
+    image: certbot/certbot:latest
+    container_name: securecity_certbot
+    <<: *restart-unless-stopped
+    volumes:
+      - letsencrypt_certs:/etc/letsencrypt
+      - letsencrypt_www:/var/www/certbot
+    entrypoint: /bin/sh -c "trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done"
+    networks:
+      - securecity_net
+    logging: *default-logging
+
+  # ─────────────────────────────────────────────
+  # Prometheus — Metrics Collection
+  # ─────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: securecity_prometheus
+    <<: *restart-unless-stopped
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+      - "--storage.tsdb.retention.time=30d"
+      - "--web.enable-lifecycle"
+      - "--web.enable-admin-api"
+    volumes:
+      - ./infrastructure/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./infrastructure/monitoring/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - securecity_net
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # ─────────────────────────────────────────────
+  # Grafana — Dashboards & Alerts
+  # ─────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:latest
+    container_name: securecity_grafana
+    <<: *restart-unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:?GRAFANA_PASSWORD is required — see .env.example}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_ROOT_URL: https://${DOMAIN:-localhost}/grafana/
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+      GF_INSTALL_PLUGINS: grafana-piechart-panel,grafana-worldmap-panel
+      GF_DATABASE_URL: sqlite3:///var/lib/grafana/grafana.db
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infrastructure/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infrastructure/monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - securecity_net
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  # ─────────────────────────────────────────────
+  # AlertManager
+  # ─────────────────────────────────────────────
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: securecity_alertmanager
+    <<: *restart-unless-stopped
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+    volumes:
+      - ./infrastructure/monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    ports:
+      - "9093:9093"
+    networks:
+      - securecity_net
+    logging: *default-logging
+
+  # ─────────────────────────────────────────────
+  # Redis Commander — DEV ONLY
+  # ─────────────────────────────────────────────
+  redis_commander:
+    image: rediscommander/redis-commander:latest
+    container_name: securecity_redis_commander
+    profiles:
+      - dev
+    environment:
+      REDIS_HOSTS: "local:redis:6379:0:${REDIS_PASSWORD:?REDIS_PASSWORD is required — see .env.example}"
+      HTTP_USER: ${REDIS_COMMANDER_USER:-admin}
+      HTTP_PASSWORD: ${REDIS_COMMANDER_PASSWORD:?REDIS_COMMANDER_PASSWORD is required — see .env.example}
+    ports:
+      - "8081:8081"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - securecity_net
+
+# ============================================================
+# Networks
+# ============================================================
+networks:
+  securecity_net:
+    driver: bridge
+    name: securecity_net
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# ============================================================
+# Named Volumes
+# ============================================================
+volumes:
+  redis_data:
+    driver: local
+    name: securecity_redis_data
+  mongo_data:
+    driver: local
+    name: securecity_mongo_data
+  mongodb_backups:
+    driver: local
+    name: securecity_mongodb_backups
+  ai_models:
+    driver: local
+    name: securecity_ai_models
+  cv_models:
+    driver: local
+    name: securecity_cv_models
+  nginx_cache:
+    driver: local
+    name: securecity_nginx_cache
+  letsencrypt_certs:
+    driver: local
+    name: securecity_letsencrypt_certs
+  letsencrypt_www:
+    driver: local
+    name: securecity_letsencrypt_www
+  prometheus_data:
+    driver: local
+    name: securecity_prometheus_data
+  grafana_data:
+    driver: local
+    name: securecity_grafana_data
+  alertmanager_data:
+    driver: local
+    name: securecity_alertmanager_data

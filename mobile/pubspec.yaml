@@ -1,0 +1,106 @@
+name: securecity_ai
+description: SecureCity AI — Intelligent Urban Safety Platform
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Firebase
+  firebase_core: ^3.0.0
+  firebase_auth: ^5.0.0
+  cloud_firestore: ^5.0.0
+  firebase_storage: ^12.0.0
+  firebase_messaging: ^15.0.0
+
+  # State Management & Navigation
+  flutter_riverpod: ^2.5.0
+  riverpod_annotation: ^2.3.0
+  go_router: ^14.0.0
+
+  # Maps & Location
+  google_maps_flutter: ^2.6.0
+  geolocator: ^12.0.0
+
+  # Sensors & Hardware
+  sensors_plus: ^5.0.0
+  local_auth: ^2.2.0
+  vibration: ^1.9.0
+
+  # Media & Camera
+  image_picker: ^1.1.0
+  camera: ^0.11.0
+  record: ^5.1.0
+  video_player: ^2.8.0
+
+  # Permissions
+  permission_handler: ^11.3.0
+
+  # Voice & TTS
+  speech_to_text: ^6.6.0
+  flutter_tts: ^4.0.0
+
+  # Networking
+  dio: ^5.4.0
+  connectivity_plus: ^6.0.0
+  url_launcher: ^6.3.0
+
+  # Storage & Preferences
+  shared_preferences: ^2.2.0
+  path_provider: ^2.1.0
+
+  # Notifications
+  flutter_local_notifications: ^17.0.0
+
+  # Authentication
+  google_sign_in: ^6.2.0
+
+  # UI & Animations
+  lottie: ^3.1.0
+  flutter_animate: ^4.5.0
+  shimmer: ^3.0.0
+  cached_network_image: ^3.3.0
+  google_fonts: ^6.2.0
+
+  # Charts
+  fl_chart: ^0.68.0
+
+  # Internationalization
+  intl: ^0.19.0
+
+  # Code Generation
+  freezed_annotation: ^2.4.0
+  json_annotation: ^4.9.0
+
+  # Value equality
+  equatable: ^2.0.5
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  build_runner: ^2.4.0
+  freezed: ^2.4.0
+  json_serializable: ^6.8.0
+  riverpod_generator: ^2.3.0
+
+  # Test-only Firebase fakes — widget tests never touch real Firebase
+  # plugin channels, so FirebaseAuth/Firestore providers are overridden
+  # with these in tests.
+  firebase_auth_mocks: ^0.14.0
+  fake_cloud_firestore: ^3.0.3
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/animations/
+    - assets/icons/
+  # Inter is loaded at runtime via the google_fonts package (see
+  # core/theme/app_typography.dart) rather than bundled here — swap to
+  # bundled .ttf assets under assets/fonts/ if the app needs to render
+  # correctly with no network access on first launch.

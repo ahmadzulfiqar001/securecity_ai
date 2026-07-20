@@ -1,0 +1,456 @@
+name: SecureCity AI CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}/securecity-ai
+  PYTHON_VERSION: "3.12"
+
+# ============================================================
+# Core app data/auth/notifications live in Firebase — there is no
+# custom backend to test/build/deploy here. This pipeline covers:
+#   - the Flutter mobile app
+#   - the ai_engine / cv_engine Python microservices (AI/CV inference)
+# ============================================================
+jobs:
+
+  # ──────────────────────────────────────────────────────────
+  # Backend Tests (AI/CV microservices)
+  # ──────────────────────────────────────────────────────────
+  test-backend:
+    name: Backend Tests (Python)
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+      mongodb:
+        image: mongo:7
+        env:
+          MONGO_INITDB_ROOT_USERNAME: mongoadmin
+          MONGO_INITDB_ROOT_PASSWORD: test_password
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")' --quiet"
+          --health-interval 15s
+          --health-timeout 10s
+          --health-retries 5
+        ports:
+          - 27017:27017
+
+    env:
+      REDIS_URL: redis://localhost:6379/0
+      MONGODB_URL: mongodb://mongoadmin:test_password@localhost:27017/securecity_ml_test?authSource=admin
+      ENVIRONMENT: testing
+      # Now required by both services' Settings (see HIGH-01 in the
+      # architecture audit — the old default was a public, guessable
+      # string). Set at job level so it's explicit rather than relying
+      # solely on ai_engine/tests/conftest.py's os.environ.setdefault.
+      INTERNAL_SERVICE_TOKEN: test-internal-token
+
+    strategy:
+      matrix:
+        service: [ai_engine, cv_engine]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: backend/${{ matrix.service }}/requirements.txt
+
+      - name: Install ${{ matrix.service }} dependencies
+        working-directory: backend/${{ matrix.service }}
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio pytest-cov httpx
+
+      - name: Run ${{ matrix.service }} tests
+        working-directory: backend/${{ matrix.service }}
+        run: |
+          if [ -d tests ]; then
+            pytest tests/ \
+              --cov=app \
+              --cov-report=xml:coverage-${{ matrix.service }}.xml \
+              --cov-report=term-missing \
+              --junit-xml=junit-${{ matrix.service }}.xml \
+              -v --tb=short
+          else
+            echo "No tests/ directory yet for ${{ matrix.service }} — skipping."
+          fi
+
+      - name: Upload coverage reports to Codecov
+        if: hashFiles(format('backend/{0}/coverage-{0}.xml', matrix.service)) != ''
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: backend/${{ matrix.service }}/coverage-${{ matrix.service }}.xml
+          flags: backend-${{ matrix.service }}
+          name: ${{ matrix.service }}-coverage
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-${{ matrix.service }}-test-results
+          path: backend/${{ matrix.service }}/junit-*.xml
+          if-no-files-found: ignore
+          retention-days: 14
+
+  # ──────────────────────────────────────────────────────────
+  # Flutter Tests (Citizen Mobile App)
+  # ──────────────────────────────────────────────────────────
+  test-flutter:
+    name: Flutter Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Get Flutter dependencies
+        working-directory: mobile
+        run: flutter pub get
+
+      - name: Generate code (riverpod/freezed/json_serializable)
+        working-directory: mobile
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Run Flutter analyze
+        working-directory: mobile
+        run: flutter analyze --fatal-warnings
+
+      - name: Run Flutter tests
+        working-directory: mobile
+        run: |
+          flutter test \
+            --coverage \
+            --reporter=expanded
+
+      - name: Build Android APK (verify)
+        working-directory: mobile
+        run: flutter build apk --release
+
+      - name: Upload Flutter coverage
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: mobile/coverage
+          flags: flutter
+          name: flutter-coverage
+
+  # ──────────────────────────────────────────────────────────
+  # Dashboard Tests (Flutter Web — Authority Dashboard)
+  # Previously uncovered by CI entirely (see HIGH-07 in the architecture
+  # audit) — mirrors test-flutter above, but builds for web since
+  # dashboard/ has no android/ios platform folders.
+  # ──────────────────────────────────────────────────────────
+  test-dashboard:
+    name: Dashboard Tests (Flutter Web)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Get Flutter dependencies
+        working-directory: dashboard
+        run: flutter pub get
+
+      - name: Run Flutter analyze
+        working-directory: dashboard
+        run: flutter analyze --fatal-warnings
+
+      - name: Run Flutter tests
+        working-directory: dashboard
+        run: |
+          flutter test \
+            --coverage \
+            --reporter=expanded
+
+      - name: Build Flutter Web (verify)
+        working-directory: dashboard
+        run: flutter build web --release
+
+      - name: Upload Dashboard coverage
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: dashboard/coverage
+          flags: dashboard
+          name: dashboard-coverage
+
+  # ──────────────────────────────────────────────────────────
+  # Build & Push Docker Images (AI/CV microservices only)
+  # ──────────────────────────────────────────────────────────
+  build-and-push:
+    name: Build & Push Docker Images
+    needs: [test-backend, test-flutter]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      matrix:
+        service:
+          # Build context is backend/ (not backend/<service>) so the
+          # Dockerfile can COPY the shared backend/shared/ package — see
+          # backend/ai_engine/Dockerfile's header comment.
+          - name: ai_engine
+            context: backend
+            dockerfile: backend/ai_engine/Dockerfile
+          - name: cv_engine
+            context: backend
+            dockerfile: backend/cv_engine/Dockerfile
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_PREFIX }}-${{ matrix.service.name }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=semver,pattern={{version}}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build and push ${{ matrix.service.name }}
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.service.context }}
+          file: ${{ matrix.service.dockerfile }}
+          push: true
+          target: production
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.service.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service.name }}
+          build-args: |
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            VCS_REF=${{ github.sha }}
+            VERSION=${{ github.ref_name }}
+
+  # ──────────────────────────────────────────────────────────
+  # Deploy Firebase (Firestore rules/indexes, Storage rules, Functions)
+  # ──────────────────────────────────────────────────────────
+  deploy-firebase:
+    name: Deploy Firebase
+    needs: [test-flutter, test-dashboard]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Functions dependencies
+        working-directory: functions
+        run: npm ci
+
+      - name: Build Functions
+        working-directory: functions
+        run: npm run build
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Build Dashboard (Flutter Web)
+        working-directory: dashboard
+        run: |
+          flutter pub get
+          flutter build web --release
+
+      - name: Deploy to Firebase
+        uses: w9jds/firebase-action@v13.7.2
+        with:
+          args: deploy --only firestore:rules,firestore:indexes,storage:rules,functions,hosting
+        env:
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+
+  # ──────────────────────────────────────────────────────────
+  # Deploy AI/CV Microservices to Production
+  # ──────────────────────────────────────────────────────────
+  deploy-production:
+    name: Deploy AI/CV Microservices
+    needs: [build-and-push]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://ai.securecity.example.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.PRODUCTION_SSH_KEY }}
+
+      - name: Add server to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.PRODUCTION_SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy via SSH
+        env:
+          SERVER_HOST: ${{ secrets.PRODUCTION_SERVER_HOST }}
+          SERVER_USER: ${{ secrets.PRODUCTION_SERVER_USER }}
+          IMAGE_TAG: main-${{ github.sha }}
+        run: |
+          ssh $SERVER_USER@$SERVER_HOST << 'ENDSSH'
+            set -e
+            cd /opt/securecity-ai
+
+            # Pull latest docker-compose
+            git fetch origin main
+            git reset --hard origin/main
+
+            # Login to GHCR
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # Pull new images
+            docker compose pull ai_engine cv_engine nginx
+
+            # Rolling update with zero downtime
+            docker compose up -d --remove-orphans --no-build
+
+            # Remove old images
+            docker image prune -f
+          ENDSSH
+
+      - name: Wait for deployment
+        run: sleep 30
+
+      - name: Health check
+        run: |
+          for i in {1..10}; do
+            status=$(curl -s -o /dev/null -w "%{http_code}" https://ai.securecity.example.com/nginx-health)
+            if [ "$status" = "200" ]; then
+              echo "Health check passed (attempt $i)"
+              exit 0
+            fi
+            echo "Health check attempt $i failed (HTTP $status), retrying..."
+            sleep 10
+          done
+          echo "Health check failed after 10 attempts"
+          exit 1
+
+      - name: Notify Slack — Success
+        if: success()
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          payload: |
+            {
+              "text": "*SecureCity AI* AI/CV microservices deployed successfully!",
+              "attachments": [
+                {
+                  "color": "#36a64f",
+                  "fields": [
+                    {"title": "Branch", "value": "${{ github.ref_name }}", "short": true},
+                    {"title": "Commit", "value": "${{ github.sha }}", "short": true},
+                    {"title": "Author", "value": "${{ github.actor }}", "short": true},
+                    {"title": "URL", "value": "https://ai.securecity.example.com", "short": true}
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      - name: Notify Slack — Failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          payload: |
+            {
+              "text": "*SecureCity AI* deployment FAILED!",
+              "attachments": [
+                {
+                  "color": "#d73a49",
+                  "fields": [
+                    {"title": "Branch", "value": "${{ github.ref_name }}", "short": true},
+                    {"title": "Commit", "value": "${{ github.sha }}", "short": true},
+                    {"title": "Author", "value": "${{ github.actor }}", "short": true},
+                    {"title": "Workflow", "value": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}", "short": false}
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      - name: Rollback on failure
+        if: failure()
+        env:
+          SERVER_HOST: ${{ secrets.PRODUCTION_SERVER_HOST }}
+          SERVER_USER: ${{ secrets.PRODUCTION_SERVER_USER }}
+        run: |
+          echo "Initiating rollback..."
+          ssh $SERVER_USER@$SERVER_HOST << 'ENDSSH'
+            cd /opt/securecity-ai
+            git log --oneline -5
+            PREVIOUS_SHA=$(git log --format="%H" -n 2 | tail -n 1)
+            git reset --hard $PREVIOUS_SHA
+            docker compose up -d --no-build
+            echo "Rolled back to $PREVIOUS_SHA"
+          ENDSSH

@@ -1,0 +1,72 @@
+# ===========================================================
+# SecureCity AI — Prometheus Scrape Configuration
+#
+# Scoped to what actually runs in docker-compose.yml. Core app
+# data/auth/notifications live in Firebase (not scrapeable here) — this
+# stack only runs ai_engine/cv_engine plus their supporting services.
+# ===========================================================
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+  external_labels:
+    environment: 'production'
+    project: 'securecity-ai'
+    region: 'pk-south-1'
+
+# Load alerting rules
+rule_files:
+  - "alert_rules.yml"
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+      timeout: 10s
+      api_version: v2
+
+# ===========================================================
+# Scrape Configurations
+# ===========================================================
+scrape_configs:
+
+  # ── Prometheus self-monitoring ─────────────────────────
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    metrics_path: /metrics
+
+  # ── AI Engine ──────────────────────────────────────────
+  - job_name: 'ai_engine'
+    static_configs:
+      - targets: ['ai_engine:8001']
+        labels:
+          service: 'ai_engine'
+          component: 'ml'
+    metrics_path: /metrics
+    scrape_interval: 30s
+    scrape_timeout: 15s
+
+  # ── CV Engine ──────────────────────────────────────────
+  - job_name: 'cv_engine'
+    static_configs:
+      - targets: ['cv_engine:8002']
+        labels:
+          service: 'cv_engine'
+          component: 'computer_vision'
+    metrics_path: /metrics
+    scrape_interval: 30s
+    scrape_timeout: 15s
+
+  # ── Grafana ────────────────────────────────────────────
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000']
+        labels:
+          service: 'grafana'
+          component: 'monitoring'
+    metrics_path: /metrics
+    scrape_interval: 60s

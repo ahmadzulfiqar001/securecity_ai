@@ -1,0 +1,116 @@
+# ===========================================================
+# SecureCity AI — Prometheus Alert Rules
+#
+# Scoped to what's actually deployed and instrumented (see
+# prometheus.yml for the matching scrape config). Every alert here
+# targets a metric that a real running service exports — no
+# PostgreSQL/MongoDB-replica-set/cAdvisor/node_exporter/blackbox-probe
+# alerts, since none of those are part of this stack, and no
+# business-metric alerts for counters (SOS spikes, notification
+# failures) that nothing in ai_engine/cv_engine actually increments —
+# those events live in Firebase Cloud Functions, outside Prometheus's
+# reach entirely.
+# ===========================================================
+
+groups:
+
+  # ─────────────────────────────────────────────────────────
+  # Service Availability Alerts
+  # ─────────────────────────────────────────────────────────
+  - name: service_availability_alerts
+    interval: 15s
+    rules:
+
+      # Any scraped target down (prometheus, ai_engine, cv_engine, grafana)
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: ops
+        annotations:
+          summary: "Service {{ $labels.job }} is DOWN"
+          description: "{{ $labels.job }} on {{ $labels.instance }} has been down for more than 1 minute."
+          runbook_url: "https://wiki.securecity.internal/runbooks/service-down"
+
+      # Service flapping (up/down within 5m)
+      - alert: ServiceFlapping
+        expr: |
+          changes(up[5m]) > 3
+        for: 0m
+        labels:
+          severity: warning
+          team: ops
+        annotations:
+          summary: "Service {{ $labels.job }} is flapping"
+          description: "{{ $labels.job }} has restarted {{ $value }} times in the last 5 minutes."
+
+  # ─────────────────────────────────────────────────────────
+  # AI Engine — Prediction Latency
+  # (securecity_ai_prediction_duration_seconds_bucket — see
+  # backend/ai_engine/app/main.py's PREDICTION_LATENCY histogram)
+  # ─────────────────────────────────────────────────────────
+  - name: ai_engine_latency_alerts
+    interval: 30s
+    rules:
+
+      - alert: AIEnginePredictionHighLatencyP95
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(securecity_ai_prediction_duration_seconds_bucket[5m])) by (endpoint, le)
+          ) > 2.0
+        for: 5m
+        labels:
+          severity: warning
+          team: ml
+        annotations:
+          summary: "AI Engine p95 latency is high on {{ $labels.endpoint }}"
+          description: "ai_engine {{ $labels.endpoint }} p95 prediction latency is {{ $value | humanizeDuration }}. Expected < 2s."
+
+      - alert: AIEnginePredictionCriticalLatencyP99
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(securecity_ai_prediction_duration_seconds_bucket[5m])) by (endpoint, le)
+          ) > 5.0
+        for: 5m
+        labels:
+          severity: critical
+          team: ml
+        annotations:
+          summary: "AI Engine p99 latency is critical on {{ $labels.endpoint }}"
+          description: "ai_engine {{ $labels.endpoint }} p99 prediction latency is {{ $value | humanizeDuration }}. This is critical."
+
+  # ─────────────────────────────────────────────────────────
+  # CV Engine — Frame Analysis Latency
+  # (securecity_cv_analysis_duration_seconds_bucket — see
+  # backend/cv_engine/app/main.py's ANALYSIS_LATENCY histogram)
+  # ─────────────────────────────────────────────────────────
+  - name: cv_engine_latency_alerts
+    interval: 30s
+    rules:
+
+      - alert: CVEngineAnalysisHighLatencyP95
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(securecity_cv_analysis_duration_seconds_bucket[5m])) by (detector, le)
+          ) > 2.0
+        for: 5m
+        labels:
+          severity: warning
+          team: cv
+        annotations:
+          summary: "CV Engine p95 latency is high on {{ $labels.detector }}"
+          description: "cv_engine {{ $labels.detector }} p95 frame analysis latency is {{ $value | humanizeDuration }}. Expected < 2s."
+
+      - alert: CVEngineAnalysisCriticalLatencyP99
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(securecity_cv_analysis_duration_seconds_bucket[5m])) by (detector, le)
+          ) > 5.0
+        for: 5m
+        labels:
+          severity: critical
+          team: cv
+        annotations:
+          summary: "CV Engine p99 latency is critical on {{ $labels.detector }}"
+          description: "cv_engine {{ $labels.detector }} p99 frame analysis latency is {{ $value | humanizeDuration }}. This is critical."

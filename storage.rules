@@ -1,0 +1,66 @@
+rules_version = '2';
+
+// ============================================================
+// SecureCity AI — Firebase Storage Security Rules
+// ============================================================
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function uid() {
+      return request.auth.uid;
+    }
+
+    function isAuthority() {
+      return isSignedIn() && request.auth.token.role in ['POLICE', 'AMBULANCE', 'FIRE', 'ADMIN'];
+    }
+
+    function isValidImage() {
+      return request.resource.contentType.matches('image/.*') &&
+        request.resource.size < 10 * 1024 * 1024; // 10 MB
+    }
+
+    function isValidVideo() {
+      return request.resource.contentType.matches('video/.*') &&
+        request.resource.size < 100 * 1024 * 1024; // 100 MB
+    }
+
+    function isValidAudio() {
+      return request.resource.contentType.matches('audio/.*') &&
+        request.resource.size < 25 * 1024 * 1024; // 25 MB
+    }
+
+    // ── Profile Images ── users/profile_images/{uid}/...
+    match /users/profile_images/{userId}/{fileName} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && uid() == userId && isValidImage();
+    }
+
+    // ── Incident Evidence ── incidents/media/{uid}/{incidentId}/...
+    match /incidents/media/{userId}/{incidentId}/{fileName} {
+      allow read: if isSignedIn() && (uid() == userId || isAuthority());
+      allow write: if isSignedIn() && uid() == userId && (isValidImage() || isValidVideo());
+    }
+
+    // ── SOS Audio Evidence ── sos/audio/{uid}/{sosId}/...
+    match /sos/audio/{userId}/{sosId}/{fileName} {
+      allow read: if isSignedIn() && (uid() == userId || isAuthority());
+      allow write: if isSignedIn() && uid() == userId && isValidAudio();
+    }
+
+    // ── SOS/Evidence Videos ── evidence/videos/{uid}/{sosId}/...
+    match /evidence/videos/{userId}/{sosId}/{fileName} {
+      allow read: if isSignedIn() && (uid() == userId || isAuthority());
+      allow write: if isSignedIn() && uid() == userId && isValidVideo();
+    }
+
+    // Deny everything else by default.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
