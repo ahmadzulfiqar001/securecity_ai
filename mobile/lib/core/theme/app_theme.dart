@@ -35,7 +35,7 @@ abstract final class GlassDecoration {
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.black.withOpacity(0.3),
+            color: AppColors.black.withValues(alpha: 0.3),
             blurRadius: 20,
             spreadRadius: 0,
             offset: const Offset(0, 4),
@@ -64,7 +64,7 @@ abstract final class GlassDecoration {
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.black.withOpacity(0.2),
+            color: AppColors.black.withValues(alpha: 0.2),
             blurRadius: 12,
             spreadRadius: 0,
             offset: const Offset(0, 2),

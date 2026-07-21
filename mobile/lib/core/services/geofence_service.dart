@@ -1,10 +1,10 @@
-import '../../domain/entities/map_zone_entity.dart';
+import '../../features/map/domain/entities/map_zone_entity.dart';
 
 /// Pure geofencing logic: point-in-polygon (ray casting) against a set of
 /// active zones, with enter/exit tracking across successive location
 /// updates. No Firestore/Geolocator dependency here — see
-/// core/providers/geofence_provider.dart for the stream wiring, and
-/// core/services/notification_service.dart for the alert delivery.
+/// features/map/presentation/providers/map_providers.dart for the stream
+/// wiring, and core/services/notification_service.dart for the alert delivery.
 class GeofenceService {
   final Set<String> _insideZoneIds = {};
 

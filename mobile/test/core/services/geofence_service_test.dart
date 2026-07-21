@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:securecity_ai/core/services/geofence_service.dart';
-import 'package:securecity_ai/domain/entities/map_zone_entity.dart';
+import 'package:securecity_ai/features/map/domain/entities/map_zone_entity.dart';
 
 MapZoneEntity _squareZone(String id, {double minLat = 0, double maxLat = 1, double minLng = 0, double maxLng = 1}) {
   return MapZoneEntity(

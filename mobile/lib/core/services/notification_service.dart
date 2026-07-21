@@ -54,12 +54,12 @@ class NotificationService {
       developer.log('Notification clicked to open app: ${message.data}');
     });
 
-    // 4. Retrieve FCM Token
+    // 4. Retrieve and persist the FCM Token
     try {
       final token = await _fcm.getToken();
       if (token != null) {
         developer.log('FCM Registration Token: $token');
-        // Save token or send to backend
+        await _storage.saveFcmToken(token);
       }
     } catch (e) {
       developer.log('Failed to get FCM token: $e');

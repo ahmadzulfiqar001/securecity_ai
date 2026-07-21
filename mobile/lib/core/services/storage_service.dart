@@ -93,6 +93,15 @@ class StorageService {
         AppConstants.sosCountdownDefaultSeconds;
   }
 
+  // FCM push token
+  Future<bool> saveFcmToken(String token) async {
+    return await _prefs.setString(AppConstants.prefKeyFcmToken, token);
+  }
+
+  String? getFcmToken() {
+    return _prefs.getString(AppConstants.prefKeyFcmToken);
+  }
+
   // General clear
   Future<bool> clearAll() async {
     return await _prefs.clear();
