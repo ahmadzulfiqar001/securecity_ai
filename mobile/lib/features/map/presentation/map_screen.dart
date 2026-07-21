@@ -6,10 +6,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/failures.dart';
 import '../../../core/providers/app_providers.dart';
-import '../../../core/router/app_routes.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_typography.dart';
-import '../../../core/widgets/glass_card.dart';
+import '../../../app/routes/app_routes.dart';
+import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_typography.dart';
+import '../../../shared/cards/glass_card.dart';
 import '../../nearby_services/domain/entities/nearby_service_entity.dart';
 import '../../nearby_services/presentation/providers/nearby_services_providers.dart';
 import '../domain/entities/map_zone_entity.dart';

@@ -4,9 +4,9 @@ import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/providers/app_providers.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/widgets/app_state_view.dart';
-import '../../../core/widgets/glass_card.dart';
+import '../../../app/theme/app_colors.dart';
+import '../../../shared/widgets/app_state_view.dart';
+import '../../../shared/cards/glass_card.dart';
 import '../domain/entities/nearby_service_entity.dart';
 import 'providers/nearby_services_providers.dart';
 

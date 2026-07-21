@@ -4,11 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'core/theme/app_colors.dart';
-import 'core/theme/app_theme.dart';
-import 'core/router/app_router.dart';
+import 'app/app.dart';
 import 'core/providers/app_providers.dart';
-import 'features/settings/presentation/providers/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,71 +44,6 @@ void main() async {
             ],
             child: const SecureCityApp(),
           )
-        : const _FirebaseNotConfiguredApp(),
+        : const FirebaseNotConfiguredApp(),
   );
-}
-
-class _FirebaseNotConfiguredApp extends StatelessWidget {
-  const _FirebaseNotConfiguredApp();
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
-      home: const Scaffold(
-        backgroundColor: AppColors.darkBackground,
-        body: Center(
-          child: Padding(
-            padding: EdgeInsets.all(32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.cloud_off, size: 56, color: AppColors.warningAmber),
-                SizedBox(height: 24),
-                Text(
-                  'Firebase Not Configured',
-                  style: TextStyle(
-                    color: AppColors.darkTextPrimary,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 12),
-                Text(
-                  'Run `flutterfire configure` in mobile/ to connect this app\n'
-                  'to the SecureCity AI Firebase project, then restart.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: AppColors.darkTextSecondary, height: 1.5),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class SecureCityApp extends ConsumerWidget {
-  const SecureCityApp({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Initialize Notification Service on app startup
-    try {
-      ref.read(notificationServiceProvider).initialize();
-    } catch (e) {
-      debugPrint('Notification Service initialization skipped: $e');
-    }
-
-    return MaterialApp.router(
-      title: 'SecureCity AI',
-      debugShowCheckedModeBanner: false,
-      themeMode: ref.watch(themeModeProvider),
-      darkTheme: AppTheme.darkTheme,
-      theme: AppTheme.lightTheme,
-      routerConfig: ref.watch(appRouterProvider),
-    );
-  }
 }

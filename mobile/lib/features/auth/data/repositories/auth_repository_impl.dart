@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:google_sign_in/google_sign_in.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/errors/failures.dart';
-import '../../../../core/services/storage_service.dart';
+import '../../../../core/storage/storage_service.dart';
 import '../../../emergency_contacts/domain/entities/emergency_contact_entity.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
+import '../../app/theme/app_colors.dart';
 
 /// Shared error/success snackbar, replacing the `_showErrorSnackbar` helper
 /// that was previously copy-pasted verbatim across `login_screen.dart`,

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
+import '../../app/theme/app_colors.dart';
 
 /// Full-width destructive/emergency action button (sign out, delete,
 /// cancel SOS). Extracted from the `ElevatedButton.styleFrom(backgroundColor:

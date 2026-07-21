@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/app_typography.dart';
+import '../../app/theme/app_typography.dart';
 
 /// Bold section title with an optional trailing action, used to introduce
 /// grouped content on list-style screens (Quick Actions, Recent Alerts,

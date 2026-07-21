@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/providers/app_providers.dart';
-import '../../../../core/services/storage_service.dart';
+import '../../../../core/storage/storage_service.dart';
 
 /// Persists the user's theme preference (System/Light/Dark) via
 /// [StorageService], defaulting to [ThemeMode.dark] to match the app's

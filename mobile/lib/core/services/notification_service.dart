@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:developer' as developer;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'storage_service.dart';
+import '../storage/storage_service.dart';
 
 class NotificationService {
   final FirebaseMessaging _fcm;

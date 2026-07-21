@@ -34,14 +34,14 @@ dependencies:
   # Media & Camera
   image_picker: ^1.1.0
   camera: ^0.11.0
-  record: ^5.1.0
+  record: ^7.1.1
   video_player: ^2.8.0
 
   # Permissions
   permission_handler: ^11.3.0
 
   # Voice & TTS
-  speech_to_text: ^6.6.0
+  speech_to_text: ^7.4.0
   flutter_tts: ^4.0.0
 
   # Networking

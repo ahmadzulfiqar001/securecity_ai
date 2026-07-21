@@ -5,11 +5,11 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/app_providers.dart';
-import '../../../core/router/app_routes.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/widgets/danger_button.dart';
-import '../../../core/widgets/glass_card.dart';
-import '../../../core/widgets/section_header.dart';
+import '../../../app/routes/app_routes.dart';
+import '../../../app/theme/app_colors.dart';
+import '../../../shared/buttons/danger_button.dart';
+import '../../../shared/cards/glass_card.dart';
+import '../../../shared/widgets/section_header.dart';
 import '../../auth/presentation/auth_notifier.dart';
 import 'providers/theme_provider.dart';
 

@@ -6,11 +6,11 @@ import 'package:go_router/go_router.dart';
 import 'package:vibration/vibration.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/app_providers.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_typography.dart';
+import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/utils/motion.dart';
-import '../../../core/widgets/app_snackbar.dart';
-import '../../../core/widgets/danger_button.dart';
+import '../../../shared/dialogs/app_snackbar.dart';
+import '../../../shared/buttons/danger_button.dart';
 import '../domain/entities/sos_event_entity.dart';
 import 'providers/sos_providers.dart';
 

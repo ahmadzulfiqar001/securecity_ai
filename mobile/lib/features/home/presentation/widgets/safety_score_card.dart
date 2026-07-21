@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_theme.dart';
-import '../../../../core/theme/app_typography.dart';
+import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_theme.dart';
+import '../../../../app/theme/app_typography.dart';
 import '../../../../core/utils/motion.dart';
-import '../../../../core/widgets/glass_card.dart';
+import '../../../../shared/cards/glass_card.dart';
 
 /// Circular gauge summarizing the user's current-zone safety score.
 class SafetyScoreCard extends StatelessWidget {

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../providers/app_providers.dart';
+import '../../core/providers/app_providers.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import 'app_routes.dart';

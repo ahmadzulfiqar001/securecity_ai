@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
-import '../theme/app_theme.dart';
+import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_theme.dart';
 
 /// Standard glassmorphic surface used across the app for cards, list tiles,
 /// and content containers. Wraps [GlassDecoration.surfaceCard] so every

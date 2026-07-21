@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
-import '../theme/app_typography.dart';
+import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_typography.dart';
 
 /// Centered spinner for the loading branch of a `StreamProvider`/`FutureProvider`
 /// `.when()`. Shared across every Firestore-backed screen instead of each
