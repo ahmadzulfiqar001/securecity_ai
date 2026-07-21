@@ -4,10 +4,10 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/storage/storage_service.dart';
-import '../../../emergency_contacts/domain/entities/emergency_contact_entity.dart';
-import '../../domain/entities/user_entity.dart';
+import '../../../../core/entities/emergency_contact_entity.dart';
+import '../../../../core/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
-import '../models/user_model.dart';
+import '../../../../core/models/user_model.dart';
 
 /// Auth is handled by Firebase Auth; user profiles live in the Firestore
 /// `users` collection (doc id == Firebase UID) — there is no custom backend

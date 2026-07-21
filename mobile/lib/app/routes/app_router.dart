@@ -10,18 +10,19 @@ import '../theme/app_typography.dart';
 import 'app_routes.dart';
 import '../../features/splash/presentation/splash_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
-import '../../features/auth/presentation/login/login_screen.dart';
-import '../../features/auth/presentation/register/register_screen.dart';
+import '../../features/authentication/presentation/login/login_screen.dart';
+import '../../features/authentication/presentation/register/register_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/sos/presentation/sos_screen.dart';
 import '../../features/map/presentation/map_screen.dart';
-import '../../features/chatbot/presentation/chatbot_screen.dart';
+import '../../features/chat/presentation/chatbot_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/incident/presentation/report_incident_screen.dart';
+import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/emergency_contacts/presentation/emergency_contacts_screen.dart';
 import '../../features/journey_history/presentation/journey_history_screen.dart';
-import '../../features/nearby_services/presentation/nearby_services_screen.dart';
+import '../../features/services/presentation/nearby_services_screen.dart';
 import '../../features/area_safety/presentation/area_safety_screen.dart';
 
 /// Bridges a [Stream] (Firebase's `authStateChanges()`) to a [Listenable]
@@ -152,7 +153,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
-        path: AppRoutes.chatbot,
+        path: AppRoutes.chat,
         builder: (BuildContext context, GoRouterState state) {
           return const ChatbotScreen();
         },
@@ -167,6 +168,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.incidentReport,
         builder: (BuildContext context, GoRouterState state) {
           return const ReportIncidentScreen();
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.profile,
+        builder: (BuildContext context, GoRouterState state) {
+          return const ProfileScreen();
         },
       ),
       GoRoute(
@@ -188,7 +195,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
-        path: AppRoutes.nearbyServices,
+        path: AppRoutes.services,
         builder: (BuildContext context, GoRouterState state) {
           return const NearbyServicesScreen();
         },

@@ -10,7 +10,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../shared/buttons/danger_button.dart';
 import '../../../shared/cards/glass_card.dart';
 import '../../../shared/widgets/section_header.dart';
-import '../../auth/presentation/auth_notifier.dart';
+import '../../../core/providers/session_providers.dart';
 import 'providers/theme_provider.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -173,7 +173,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             label: 'Sign Out',
             icon: Icons.logout,
             onPressed: () async {
-              await ref.read(authNotifierProvider.notifier).logout();
+              await ref.read(signOutProvider)();
               if (context.mounted) {
                 context.go(AppRoutes.login);
               }

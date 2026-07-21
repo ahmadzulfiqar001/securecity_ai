@@ -12,12 +12,13 @@ abstract final class AppRoutes {
   static const String home = '/home';
   static const String sos = '/sos';
   static const String map = '/map';
-  static const String chatbot = '/chatbot';
+  static const String chat = '/chat';
   static const String notifications = '/notifications';
   static const String incidentReport = '/incident/report';
+  static const String profile = '/profile';
   static const String settings = '/settings';
   static const String emergencyContacts = '/emergency-contacts';
   static const String journeyHistory = '/journey-history';
-  static const String nearbyServices = '/nearby-services';
+  static const String services = '/services';
   static const String areaSafety = '/area-safety';
 }

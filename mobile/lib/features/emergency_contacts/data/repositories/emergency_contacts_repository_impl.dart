@@ -2,9 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/errors/failures.dart';
-import '../../domain/entities/emergency_contact_entity.dart';
+import '../../../../core/entities/emergency_contact_entity.dart';
 import '../../domain/repositories/emergency_contacts_repository.dart';
-import '../models/emergency_contact_model.dart';
+import '../../../../core/models/emergency_contact_model.dart';
 
 class EmergencyContactsRepositoryImpl implements EmergencyContactsRepository {
   final FirebaseFirestore _firestore;

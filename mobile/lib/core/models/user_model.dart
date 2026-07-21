@@ -1,5 +1,9 @@
-import '../../../emergency_contacts/data/models/emergency_contact_model.dart';
+import 'emergency_contact_model.dart';
 
+/// Shared user-profile data model (Firestore JSON mapping). Lives in
+/// `core/` alongside [UserEntity] for the same reason — both the
+/// `authentication` and `emergency_contacts` features need it, and
+/// features should depend on `core/`, not on each other.
 class UserModel {
   final String id;
   final String firebaseUid;

@@ -1,5 +1,5 @@
 import '../../../../core/errors/failures.dart';
-import '../entities/user_entity.dart';
+import '../../../../core/entities/user_entity.dart';
 
 abstract class AuthRepository {
   Future<Result<UserEntity>> signInWithEmail({

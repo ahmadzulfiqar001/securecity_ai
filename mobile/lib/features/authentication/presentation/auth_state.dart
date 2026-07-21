@@ -1,4 +1,4 @@
-import '../domain/entities/user_entity.dart';
+import '../../../core/entities/user_entity.dart';
 
 class AuthState {
   final bool isLoading;

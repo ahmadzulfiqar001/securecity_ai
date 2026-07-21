@@ -5,7 +5,7 @@ import '../../../core/providers/app_providers.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../shared/widgets/app_state_view.dart';
 import '../../../shared/cards/glass_card.dart';
-import '../domain/entities/emergency_contact_entity.dart';
+import '../../../core/entities/emergency_contact_entity.dart';
 import 'providers/emergency_contacts_providers.dart';
 
 class EmergencyContactsScreen extends ConsumerWidget {

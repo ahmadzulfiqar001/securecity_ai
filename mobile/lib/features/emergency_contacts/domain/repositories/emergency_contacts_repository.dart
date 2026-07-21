@@ -1,5 +1,5 @@
 import '../../../../core/errors/failures.dart';
-import '../entities/emergency_contact_entity.dart';
+import '../../../../core/entities/emergency_contact_entity.dart';
 
 /// Emergency contacts are stored as an embedded list field on the
 /// `users/{uid}` document (see the auth feature's `UserModel.emergencyContacts`),

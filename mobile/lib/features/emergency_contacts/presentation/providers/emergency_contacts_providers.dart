@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/providers/app_providers.dart';
 import '../../data/repositories/emergency_contacts_repository_impl.dart';
-import '../../domain/entities/emergency_contact_entity.dart';
+import '../../../../core/entities/emergency_contact_entity.dart';
 import '../../domain/repositories/emergency_contacts_repository.dart';
 
 final emergencyContactsRepositoryProvider = Provider<EmergencyContactsRepository>((ref) {

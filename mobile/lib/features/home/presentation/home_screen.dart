@@ -8,13 +8,11 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/app_typography.dart';
 import '../../../core/providers/app_providers.dart';
+import '../../../core/providers/session_providers.dart';
 import '../../../core/utils/responsive.dart';
-import '../../../shared/buttons/danger_button.dart';
 import '../../../shared/widgets/glow_orb.dart';
-import '../../auth/presentation/auth_notifier.dart';
 import '../../map/presentation/providers/map_providers.dart';
 import 'widgets/alert_item.dart';
-import 'widgets/profile_menu_item.dart';
 import 'widgets/quick_action_card.dart';
 import 'widgets/safety_score_card.dart';
 
@@ -26,11 +24,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  /// Bottom-nav position: only 0 (Home) and 4 (Profile) render in place —
-  /// Map/SOS/Chat (1-3) are pushed as full routes and never change this,
-  /// so the bar doesn't visually "stick" on them after the user returns.
-  int _currentIndex = 0;
-
   ShakeDetector? _shakeDetector;
 
   @override
@@ -62,9 +55,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       case 2:
         context.push(AppRoutes.sos);
       case 3:
-        context.push(AppRoutes.chatbot);
-      default:
-        setState(() => _currentIndex = index);
+        context.push(AppRoutes.chat);
+      case 4:
+        context.push(AppRoutes.profile);
     }
   }
 
@@ -85,7 +78,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             blurRadius: 120,
             color: AppColors.accentCyan.withValues(alpha: 0.1),
           ),
-          _currentIndex == 4 ? const _ProfileTab() : const _HomeTab(),
+          const _HomeTab(),
         ],
       ),
       bottomNavigationBar: Container(
@@ -93,7 +86,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           border: Border(top: BorderSide(color: AppColors.glassWhite10, width: 1)),
         ),
         child: BottomNavigationBar(
-          currentIndex: _currentIndex,
+          // Home (index 0) is the only tab that ever renders in place —
+          // Map/SOS/Chat/Profile are pushed as full routes, so the bar
+          // always shows Home selected rather than "sticking" on whichever
+          // was tapped last.
+          currentIndex: 0,
           onTap: _onNavTap,
           items: [
             const BottomNavigationBarItem(
@@ -140,8 +137,8 @@ class _HomeTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authNotifierProvider);
-    final userName = authState.user?.fullName ?? 'Citizen';
+    final user = ref.watch(currentUserProvider);
+    final userName = user?.fullName ?? 'Citizen';
     final columns = context.gridColumns;
 
     return SafeArea(
@@ -212,7 +209,7 @@ class _HomeTab extends ConsumerWidget {
                 subtitle: 'Hospitals & Police',
                 icon: Icons.local_hospital_outlined,
                 color: AppColors.infoBlue,
-                onTap: () => context.push(AppRoutes.nearbyServices),
+                onTap: () => context.push(AppRoutes.services),
               ),
               QuickActionCard(
                 title: 'Area Safety',
@@ -240,65 +237,6 @@ class _HomeTab extends ConsumerWidget {
             type: 'traffic',
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ProfileTab extends ConsumerWidget {
-  const _ProfileTab();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authNotifierProvider);
-    final user = authState.user;
-
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text('My Profile', style: AppTypography.darkHeadlineSmall),
-            const SizedBox(height: 32),
-            const CircleAvatar(
-              radius: 54,
-              backgroundColor: AppColors.glassCyan20,
-              child: Icon(Icons.person, size: 64, color: AppColors.accentCyan),
-            ),
-            const SizedBox(height: 24),
-            Text(user?.fullName ?? 'Citizen', style: AppTypography.darkTitleLarge),
-            const SizedBox(height: 8),
-            Text(user?.email ?? '', style: AppTypography.darkBodyMedium),
-            const SizedBox(height: 48),
-            ProfileMenuItem(
-              title: 'Emergency Contacts',
-              icon: Icons.contact_phone_outlined,
-              onTap: () => context.push(AppRoutes.emergencyContacts),
-            ),
-            ProfileMenuItem(
-              title: 'Journey History',
-              icon: Icons.history,
-              onTap: () => context.push(AppRoutes.journeyHistory),
-            ),
-            ProfileMenuItem(
-              title: 'Settings',
-              icon: Icons.settings_outlined,
-              onTap: () => context.push(AppRoutes.settings),
-            ),
-            const Spacer(),
-            DangerButton(
-              label: 'Sign Out',
-              icon: Icons.logout,
-              onPressed: () async {
-                await ref.read(authNotifierProvider.notifier).logout();
-                if (context.mounted) {
-                  context.go(AppRoutes.login);
-                }
-              },
-            ),
-          ],
-        ),
       ),
     );
   }
