@@ -43,10 +43,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
     // 2. Check authentication state
     final currentUser = auth.currentUser;
-    if (currentUser != null) {
-      context.go(AppRoutes.home);
-    } else {
+    if (currentUser == null) {
       context.go(AppRoutes.login);
+    } else if (!currentUser.emailVerified) {
+      context.go(AppRoutes.verifyEmail);
+    } else {
+      context.go(AppRoutes.home);
     }
   }
 
