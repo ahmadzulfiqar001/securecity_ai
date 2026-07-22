@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 
@@ -47,14 +48,14 @@ class MapScreen extends ConsumerStatefulWidget {
 }
 
 class _MapScreenState extends ConsumerState<MapScreen> {
-  GoogleMapController? _mapController;
+  final MapController _mapController = MapController();
   Position? _currentPosition;
   bool _isLoading = true;
   bool _isHeatmapEnabled = false;
   bool _isPickingDestination = false;
   bool _isScoringRoute = false;
 
-  Set<Circle> _heatmapCircles = {};
+  List<CircleMarker> _heatmapCircles = [];
   LatLng? _destination;
   RouteSafetyEntity? _routeResult;
 
@@ -76,23 +77,11 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     }
   }
 
-  void _onMapCreated(GoogleMapController controller) {
-    _mapController = controller;
-    if (_currentPosition != null) {
-      _mapController!.animateCamera(
-        CameraUpdate.newLatLngZoom(
-          LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
-          15,
-        ),
-      );
-    }
-  }
-
   Future<void> _toggleHeatmap() async {
     if (_isHeatmapEnabled) {
       setState(() {
         _isHeatmapEnabled = false;
-        _heatmapCircles = {};
+        _heatmapCircles = [];
       });
       return;
     }
@@ -114,15 +103,15 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         setState(() {
           _isHeatmapEnabled = true;
           _heatmapCircles = heatmap.cells
-              .map((cell) => Circle(
-                    circleId: CircleId('heat_${cell.lat}_${cell.lng}'),
-                    center: LatLng(cell.lat, cell.lng),
+              .map((cell) => CircleMarker(
+                    point: LatLng(cell.lat, cell.lng),
                     radius: 120,
-                    fillColor: _riskColor(cell.riskLevel).withValues(alpha: 0.35),
-                    strokeColor: _riskColor(cell.riskLevel),
-                    strokeWidth: 1,
+                    useRadiusInMeter: true,
+                    color: _riskColor(cell.riskLevel).withValues(alpha: 0.35),
+                    borderColor: _riskColor(cell.riskLevel),
+                    borderStrokeWidth: 1,
                   ))
-              .toSet();
+              .toList();
         });
       case Error(failure: final failure):
         ScaffoldMessenger.of(context).showSnackBar(
@@ -142,11 +131,11 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     );
   }
 
-  Future<void> _onMapTap(LatLng position) async {
+  Future<void> _onMapTap(TapPosition tapPosition, LatLng point) async {
     if (!_isPickingDestination || _currentPosition == null) return;
 
     setState(() {
-      _destination = position;
+      _destination = point;
       _isPickingDestination = false;
       _isScoringRoute = true;
     });
@@ -154,7 +143,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     final result = await ref.read(predictionsRepositoryProvider).scoreRoute(
       coordinates: [
         [_currentPosition!.longitude, _currentPosition!.latitude],
-        [position.longitude, position.latitude],
+        [point.longitude, point.latitude],
       ],
       hour: DateTime.now().hour,
     );
@@ -172,42 +161,48 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     }
   }
 
-  Set<Polygon> _buildZonePolygons(List<MapZoneEntity> zones) {
+  List<Polygon> _buildZonePolygons(List<MapZoneEntity> zones) {
     return zones.map((zone) {
       return Polygon(
-        polygonId: PolygonId(zone.id),
         points: zone.latLngPoints.map((p) => LatLng(p.$1, p.$2)).toList(),
-        fillColor: _zoneColor(zone.type, zone.severity),
-        strokeColor: _zoneColor(zone.type, zone.severity).withValues(alpha: 0.8),
-        strokeWidth: 2,
-        consumeTapEvents: false,
+        color: _zoneColor(zone.type, zone.severity),
+        borderColor: _zoneColor(zone.type, zone.severity).withValues(alpha: 0.8),
+        borderStrokeWidth: 2,
       );
-    }).toSet();
+    }).toList();
   }
 
-  Set<Marker> _buildServiceMarkers(List<NearbyServiceEntity> services) {
+  List<Marker> _buildServiceMarkers(List<NearbyServiceEntity> services) {
     return services
         .where((s) => s.type == NearbyServiceType.police || s.type == NearbyServiceType.hospital)
-        .map((s) => Marker(
-              markerId: MarkerId('service_${s.id}'),
-              position: LatLng(s.latitude, s.longitude),
-              infoWindow: InfoWindow(title: s.name, snippet: NearbyServiceType.label(s.type)),
-              icon: BitmapDescriptor.defaultMarkerWithHue(
-                s.type == NearbyServiceType.police ? BitmapDescriptor.hueBlue : BitmapDescriptor.hueRose,
-              ),
-            ))
-        .toSet();
+        .map((s) {
+      final isPolice = s.type == NearbyServiceType.police;
+      return Marker(
+        point: LatLng(s.latitude, s.longitude),
+        width: 36,
+        height: 36,
+        child: GestureDetector(
+          onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${s.name} · ${NearbyServiceType.label(s.type)}')),
+          ),
+          child: Icon(
+            isPolice ? Icons.local_police : Icons.local_hospital,
+            color: isPolice ? AppColors.markerPolice : AppColors.markerHospital,
+            size: 32,
+          ),
+        ),
+      );
+    }).toList();
   }
 
-  Set<Polyline> _buildRoutePolylines(RouteSafetyEntity route) {
+  List<Polyline> _buildRoutePolylines(RouteSafetyEntity route) {
     final points = route.segmentScores;
-    final polylines = <Polyline>{};
+    final polylines = <Polyline>[];
     for (var i = 0; i < points.length - 1; i++) {
       final a = points[i];
       final b = points[i + 1];
       final level = a['safety_level'] as String? ?? 'MODERATE';
       polylines.add(Polyline(
-        polylineId: PolylineId('route_seg_$i'),
         points: [
           LatLng((a['lat'] as num).toDouble(), (a['lon'] as num).toDouble()),
           LatLng((b['lat'] as num).toDouble(), (b['lon'] as num).toDouble()),
@@ -217,23 +212,28 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           'MODERATE' => AppColors.warningAmber,
           _ => AppColors.emergencyRed,
         },
-        width: 5,
+        strokeWidth: 5,
       ));
     }
     return polylines;
   }
 
-  Set<Marker> _buildDangerZoneMarkers(RouteSafetyEntity route) {
+  List<Marker> _buildDangerZoneMarkers(RouteSafetyEntity route) {
     return route.dangerZones.map((dz) {
       final lat = (dz['lat'] as num).toDouble();
       final lon = (dz['lon'] as num).toDouble();
       return Marker(
-        markerId: MarkerId('danger_${lat}_$lon'),
-        position: LatLng(lat, lon),
-        infoWindow: InfoWindow(title: 'Danger zone', snippet: 'Score: ${dz['score']}'),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+        point: LatLng(lat, lon),
+        width: 36,
+        height: 36,
+        child: GestureDetector(
+          onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Danger zone · score: ${dz['score']}')),
+          ),
+          child: const Icon(Icons.warning_rounded, color: AppColors.emergencyRed, size: 32),
+        ),
       );
-    }).toSet();
+    }).toList();
   }
 
   @override
@@ -241,24 +241,24 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     final zonesAsync = ref.watch(activeZonesStreamProvider);
     final servicesAsync = ref.watch(nearbyServicesStreamProvider);
 
-    final markers = <Marker>{
+    final markers = <Marker>[
       if (_currentPosition != null)
         Marker(
-          markerId: const MarkerId('current_loc'),
-          position: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
-          infoWindow: const InfoWindow(title: 'Your Location'),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+          point: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
+          width: 32,
+          height: 32,
+          child: const Icon(Icons.my_location, color: AppColors.markerUser, size: 28),
         ),
       if (_destination != null)
         Marker(
-          markerId: const MarkerId('destination'),
-          position: _destination!,
-          infoWindow: const InfoWindow(title: 'Destination'),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+          point: _destination!,
+          width: 36,
+          height: 36,
+          child: const Icon(Icons.location_on, color: AppColors.successGreen, size: 36),
         ),
-      ...servicesAsync.value != null ? _buildServiceMarkers(servicesAsync.value!) : const <Marker>{},
+      ...servicesAsync.value != null ? _buildServiceMarkers(servicesAsync.value!) : const <Marker>[],
       if (_routeResult != null) ..._buildDangerZoneMarkers(_routeResult!),
-    };
+    ];
 
     return Scaffold(
       backgroundColor: AppColors.darkBackground,
@@ -286,24 +286,27 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           ? const Center(child: CircularProgressIndicator(color: AppColors.accentCyan))
           : Stack(
               children: [
-                GoogleMap(
-                  onMapCreated: _onMapCreated,
-                  onTap: _onMapTap,
-                  initialCameraPosition: CameraPosition(
-                    target: LatLng(
+                FlutterMap(
+                  mapController: _mapController,
+                  options: MapOptions(
+                    initialCenter: LatLng(
                       _currentPosition?.latitude ?? 24.8607,
                       _currentPosition?.longitude ?? 67.0011,
                     ),
-                    zoom: 14,
+                    initialZoom: 14,
+                    onTap: _onMapTap,
                   ),
-                  markers: markers,
-                  circles: _heatmapCircles,
-                  polygons: zonesAsync.value != null ? _buildZonePolygons(zonesAsync.value!) : {},
-                  polylines: _routeResult != null ? _buildRoutePolylines(_routeResult!) : {},
-                  myLocationEnabled: true,
-                  myLocationButtonEnabled: false,
-                  zoomControlsEnabled: false,
-                  mapType: MapType.normal,
+                  children: [
+                    // OpenStreetMap tiles - free, no Google billing account required.
+                    TileLayer(
+                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'ai.securecity.mobile',
+                    ),
+                    if (zonesAsync.value != null) PolygonLayer(polygons: _buildZonePolygons(zonesAsync.value!)),
+                    if (_heatmapCircles.isNotEmpty) CircleLayer(circles: _heatmapCircles),
+                    if (_routeResult != null) PolylineLayer(polylines: _buildRoutePolylines(_routeResult!)),
+                    MarkerLayer(markers: markers),
+                  ],
                 ),
 
                 if (_isPickingDestination)

@@ -11,9 +11,12 @@ class IncidentRepositoryImpl implements IncidentRepository {
   IncidentRepositoryImpl(this._firestore);
 
   @override
-  Future<Result<void>> submitIncident(IncidentEntity incident) async {
+  String newIncidentId() => _firestore.collection(AppConstants.colIncidents).doc().id;
+
+  @override
+  Future<Result<void>> submitIncident(String id, IncidentEntity incident) async {
     try {
-      await _firestore.collection(AppConstants.colIncidents).add({
+      await _firestore.collection(AppConstants.colIncidents).doc(id).set({
         'reporterId': incident.reporterId,
         'title': incident.title,
         'description': incident.description,

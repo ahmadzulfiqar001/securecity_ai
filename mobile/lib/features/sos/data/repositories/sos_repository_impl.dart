@@ -44,4 +44,14 @@ class SosRepositoryImpl implements SosRepository {
       return Error(UnknownFailure(cause: e));
     }
   }
+
+  @override
+  Future<Result<void>> attachAudioEvidence(String eventId, String audioUrl) async {
+    try {
+      await _sosEvents.doc(eventId).update({'audioUrl': audioUrl});
+      return const Success(null);
+    } catch (e) {
+      return Error(UnknownFailure(cause: e));
+    }
+  }
 }

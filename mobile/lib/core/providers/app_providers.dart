@@ -3,12 +3,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../storage/storage_service.dart';
 import '../services/location_service.dart';
 import '../services/notification_service.dart';
+import '../services/storage_upload_service.dart';
 
 // SharedPreferences
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
@@ -40,9 +44,30 @@ final storageProvider = Provider<FirebaseStorage>((ref) {
   return FirebaseStorage.instance;
 });
 
+// Storage Upload Service - shared upload helper for incident/SOS/profile media
+final storageUploadServiceProvider = Provider<StorageUploadService>((ref) {
+  return StorageUploadService(ref.watch(storageProvider));
+});
+
 // Firebase Messaging
 final firebaseMessagingProvider = Provider<FirebaseMessaging>((ref) {
   return FirebaseMessaging.instance;
+});
+
+// Firebase Analytics
+final firebaseAnalyticsProvider = Provider<FirebaseAnalytics>((ref) {
+  return FirebaseAnalytics.instance;
+});
+
+// Firebase Crashlytics
+final firebaseCrashlyticsProvider = Provider<FirebaseCrashlytics>((ref) {
+  return FirebaseCrashlytics.instance;
+});
+
+// Firebase Remote Config - fetched and activated once in main.dart before
+// runApp(); this provider just exposes the already-initialized singleton.
+final remoteConfigProvider = Provider<FirebaseRemoteConfig>((ref) {
+  return FirebaseRemoteConfig.instance;
 });
 
 // Location Service

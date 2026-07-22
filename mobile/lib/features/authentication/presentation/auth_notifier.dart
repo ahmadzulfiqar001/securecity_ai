@@ -113,6 +113,57 @@ class AuthNotifier extends StateNotifier<AuthState> {
     return success;
   }
 
+  Future<bool> sendEmailVerification() async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    final result = await _authRepository.sendEmailVerification();
+
+    bool success = false;
+    result.fold(
+      onSuccess: (_) {
+        state = state.copyWith(isLoading: false);
+        success = true;
+      },
+      onError: (failure) {
+        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+      },
+    );
+    return success;
+  }
+
+  Future<bool> checkEmailVerified() async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    final result = await _authRepository.reloadAndCheckEmailVerified();
+
+    bool verified = false;
+    result.fold(
+      onSuccess: (isVerified) {
+        state = state.copyWith(isLoading: false);
+        verified = isVerified;
+      },
+      onError: (failure) {
+        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+      },
+    );
+    return verified;
+  }
+
+  Future<bool> updateProfilePhoto(String photoUrl) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    final result = await _authRepository.updateProfilePhoto(photoUrl);
+
+    bool success = false;
+    result.fold(
+      onSuccess: (user) {
+        state = state.copyWith(isLoading: false, user: user);
+        success = true;
+      },
+      onError: (failure) {
+        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+      },
+    );
+    return success;
+  }
+
   Future<void> logout() async {
     state = state.copyWith(isLoading: true);
     await _authRepository.signOut();

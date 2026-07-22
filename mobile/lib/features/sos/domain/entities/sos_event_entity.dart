@@ -8,6 +8,7 @@ class SosEventEntity {
   final String message;
   final String status; // 'active' | 'resolved'
   final String createdAt;
+  final String? audioUrl;
 
   SosEventEntity({
     required this.userId,
@@ -16,5 +17,6 @@ class SosEventEntity {
     required this.message,
     required this.status,
     required this.createdAt,
+    this.audioUrl,
   });
 }

@@ -1,11 +1,15 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:record/record.dart';
 import 'package:vibration/vibration.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/app_providers.dart';
+import '../../../core/services/storage_upload_service.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_typography.dart';
 import '../../../core/utils/motion.dart';
@@ -13,6 +17,7 @@ import '../../../shared/dialogs/app_snackbar.dart';
 import '../../../shared/buttons/emergency_button.dart';
 import '../../../shared/widgets/gradient_background.dart';
 import '../domain/entities/sos_event_entity.dart';
+import '../domain/repositories/sos_repository.dart';
 import 'providers/sos_providers.dart';
 
 class SosScreen extends ConsumerStatefulWidget {
@@ -28,6 +33,7 @@ class _SosScreenState extends ConsumerState<SosScreen> {
   bool _isSosTriggered = false;
   bool _isCountdownActive = true;
   String? _sosEventId;
+  AudioRecorder? _audioRecorder;
 
   @override
   void initState() {
@@ -68,6 +74,8 @@ class _SosScreenState extends ConsumerState<SosScreen> {
       Vibration.vibrate(pattern: [500, 200, 500, 200, 1000]);
     }
 
+    unawaited(_startAudioRecording());
+
     final locationService = ref.read(locationServiceProvider);
     final pos = await locationService.getCurrentLocation();
     final uid = ref.read(firebaseAuthProvider).currentUser?.uid;
@@ -100,16 +108,86 @@ class _SosScreenState extends ConsumerState<SosScreen> {
     Vibration.cancel();
 
     final eventId = _sosEventId;
+    final sosRepo = ref.read(sosRepositoryProvider);
+    final uploadService = ref.read(storageUploadServiceProvider);
+    final uid = ref.read(firebaseAuthProvider).currentUser?.uid;
+
+    final audioPath = await _stopAudioRecording();
+
     if (eventId != null) {
-      await ref.read(sosRepositoryProvider).resolveSosEvent(eventId);
+      await sosRepo.resolveSosEvent(eventId);
+      if (audioPath != null && uid != null) {
+        // Fire-and-forget: don't block dismissing the SOS screen on the
+        // upload - it has no bearing on the emergency response itself.
+        unawaited(_uploadAudioEvidence(sosRepo, uploadService, uid, eventId, audioPath));
+      }
     }
 
     if (mounted) context.pop();
   }
 
+  /// Starts capturing ambient audio as SOS evidence the moment an alert is
+  /// triggered. Best-effort only - a denied mic permission or recorder
+  /// failure must never block the emergency dispatch flow above.
+  Future<void> _startAudioRecording() async {
+    try {
+      final recorder = AudioRecorder();
+      if (!await recorder.hasPermission()) {
+        recorder.dispose();
+        return;
+      }
+      final dir = await getTemporaryDirectory();
+      final path = '${dir.path}/sos_${DateTime.now().millisecondsSinceEpoch}.m4a';
+      await recorder.start(const RecordConfig(), path: path);
+      if (!mounted) {
+        await recorder.stop();
+        recorder.dispose();
+        return;
+      }
+      _audioRecorder = recorder;
+    } catch (_) {
+      // No audio evidence this time - the rest of the SOS flow is unaffected.
+    }
+  }
+
+  Future<String?> _stopAudioRecording() async {
+    final recorder = _audioRecorder;
+    _audioRecorder = null;
+    if (recorder == null) return null;
+    try {
+      return await recorder.stop();
+    } catch (_) {
+      return null;
+    } finally {
+      recorder.dispose();
+    }
+  }
+
+  Future<void> _uploadAudioEvidence(
+    SosRepository sosRepo,
+    StorageUploadService uploadService,
+    String uid,
+    String eventId,
+    String audioPath,
+  ) async {
+    try {
+      final fileName = audioPath.split(Platform.pathSeparator).last;
+      final storagePath = '${AppConstants.storageSosAudio}/$uid/$eventId/$fileName';
+      final url = await uploadService.uploadFile(
+        path: storagePath,
+        file: File(audioPath),
+        contentType: 'audio/mp4',
+      );
+      await sosRepo.attachAudioEvidence(eventId, url);
+    } catch (_) {
+      // Non-fatal: the SOS event is already resolved either way.
+    }
+  }
+
   @override
   void dispose() {
     _timer?.cancel();
+    _audioRecorder?.dispose();
     super.dispose();
   }
 

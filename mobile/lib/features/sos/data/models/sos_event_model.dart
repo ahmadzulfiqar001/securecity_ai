@@ -6,6 +6,7 @@ class SosEventModel {
   final String message;
   final String status;
   final String createdAt;
+  final String? audioUrl;
 
   SosEventModel({
     this.id,
@@ -15,6 +16,7 @@ class SosEventModel {
     required this.message,
     required this.status,
     required this.createdAt,
+    this.audioUrl,
   });
 
   Map<String, dynamic> toJson() {
@@ -25,6 +27,7 @@ class SosEventModel {
       'message': message,
       'status': status,
       'createdAt': createdAt,
+      if (audioUrl != null) 'audioUrl': audioUrl,
     };
   }
 }

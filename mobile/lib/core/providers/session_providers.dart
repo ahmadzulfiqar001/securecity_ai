@@ -16,6 +16,14 @@ final isSessionLoadingProvider = Provider<bool>((ref) {
   return ref.watch(authNotifierProvider).isLoading;
 });
 
+final sessionErrorProvider = Provider<String?>((ref) {
+  return ref.watch(authNotifierProvider).errorMessage;
+});
+
 final signOutProvider = Provider<Future<void> Function()>((ref) {
   return () => ref.read(authNotifierProvider.notifier).logout();
+});
+
+final updateProfilePhotoProvider = Provider<Future<bool> Function(String)>((ref) {
+  return (photoUrl) => ref.read(authNotifierProvider.notifier).updateProfilePhoto(photoUrl);
 });

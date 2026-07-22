@@ -16,6 +16,9 @@ dependencies:
   cloud_firestore: ^5.0.0
   firebase_storage: ^12.0.0
   firebase_messaging: ^15.0.0
+  firebase_analytics: ^11.6.0
+  firebase_crashlytics: ^4.3.10
+  firebase_remote_config: ^5.5.0
 
   # State Management & Navigation
   flutter_riverpod: ^2.5.0
@@ -23,7 +26,10 @@ dependencies:
   go_router: ^14.0.0
 
   # Maps & Location
-  google_maps_flutter: ^2.6.0
+  # OpenStreetMap-based - no Google billing account / API key needed, unlike
+  # google_maps_flutter.
+  flutter_map: ^8.3.1
+  latlong2: ^0.10.1
   geolocator: ^12.0.0
 
   # Sensors & Hardware

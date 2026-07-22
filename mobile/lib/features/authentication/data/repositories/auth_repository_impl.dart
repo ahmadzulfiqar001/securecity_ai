@@ -82,6 +82,11 @@ class AuthRepositoryImpl implements AuthRepository {
       }
 
       await firebaseUser.updateDisplayName(fullName);
+      try {
+        await firebaseUser.sendEmailVerification();
+      } catch (_) {
+        // Non-fatal: the Verify Email screen offers a resend button.
+      }
 
       final now = DateTime.now().toUtc().toIso8601String();
       final userModel = UserModel(
@@ -163,6 +168,41 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Result<void>> sendEmailVerification() async {
+    try {
+      final user = _firebaseAuth.currentUser;
+      if (user == null) {
+        return const Error(AuthFailure(message: 'No signed-in user.'));
+      }
+      await user.sendEmailVerification();
+      return const Success(null);
+    } on firebase.FirebaseAuthException catch (e) {
+      if (e.code == 'too-many-requests') {
+        return const Error(
+          AuthFailure(message: 'Too many requests. Please try again later.', code: 'TOO_MANY_REQUESTS'),
+        );
+      } else if (e.code == 'network-request-failed') {
+        return const Error(NetworkFailure());
+      }
+      return Error(AuthFailure(message: e.message ?? 'Could not send verification email.', code: e.code));
+    } catch (e) {
+      return Error(UnknownFailure(cause: e));
+    }
+  }
+
+  @override
+  Future<Result<bool>> reloadAndCheckEmailVerified() async {
+    try {
+      final user = _firebaseAuth.currentUser;
+      if (user == null) return const Success(false);
+      await user.reload();
+      return Success(_firebaseAuth.currentUser?.emailVerified ?? false);
+    } catch (e) {
+      return Error(UnknownFailure(cause: e));
+    }
+  }
+
+  @override
   Future<Result<void>> signOut() async {
     try {
       await _firebaseAuth.signOut();
@@ -228,6 +268,29 @@ class AuthRepositoryImpl implements AuthRepository {
 
     await docRef.set(userModel.toJson());
     return userModel;
+  }
+
+  @override
+  Future<Result<UserEntity>> updateProfilePhoto(String photoUrl) async {
+    try {
+      final firebaseUser = _firebaseAuth.currentUser;
+      if (firebaseUser == null) {
+        return const Error(AuthFailure(message: 'No signed-in user.'));
+      }
+
+      final now = DateTime.now().toUtc().toIso8601String();
+      await _usersCollection.doc(firebaseUser.uid).update({
+        'profilePhotoUrl': photoUrl,
+        'updatedAt': now,
+      });
+
+      final snapshot = await _usersCollection.doc(firebaseUser.uid).get();
+      final userModel = UserModel.fromJson(snapshot.data()!);
+      await _storageService.saveUser(userModel);
+      return Success(_mapToEntity(userModel));
+    } catch (e) {
+      return Error(UnknownFailure(cause: e));
+    }
   }
 
   UserEntity _mapToEntity(UserModel model) {
