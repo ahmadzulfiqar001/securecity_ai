@@ -35,4 +35,35 @@ class IncidentRepositoryImpl implements IncidentRepository {
       return Error(UnknownFailure(cause: e));
     }
   }
+
+  @override
+  Stream<List<IncidentEntity>> watchMyReports(String uid, {int limit = 5}) {
+    return _firestore
+        .collection(AppConstants.colIncidents)
+        .where('reporterId', isEqualTo: uid)
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map(_fromDoc).toList());
+  }
+
+  IncidentEntity _fromDoc(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data();
+    return IncidentEntity(
+      id: doc.id,
+      reporterId: data['reporterId'] as String? ?? '',
+      title: data['title'] as String? ?? '',
+      description: data['description'] as String? ?? '',
+      incidentType: data['incidentType'] as String? ?? 'OTHER',
+      severity: data['severity'] as String? ?? 'MEDIUM',
+      isAnonymous: data['isAnonymous'] as bool? ?? false,
+      status: data['status'] as String? ?? 'PENDING',
+      location:
+          (data['location'] as List<dynamic>?)?.map((e) => (e as num).toDouble()).toList() ?? const [],
+      address: data['address'] as String? ?? '',
+      evidenceUrls: (data['evidenceUrls'] as List<dynamic>?)?.map((e) => e as String).toList() ?? const [],
+      createdAt: data['createdAt'] as String? ?? '',
+      updatedAt: data['updatedAt'] as String? ?? '',
+    );
+  }
 }

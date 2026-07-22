@@ -54,4 +54,18 @@ class SosRepositoryImpl implements SosRepository {
       return Error(UnknownFailure(cause: e));
     }
   }
+
+  @override
+  Future<Result<void>> updateLocation(String eventId, double latitude, double longitude) async {
+    try {
+      await _sosEvents.doc(eventId).update({
+        'latitude': latitude,
+        'longitude': longitude,
+        'updatedAt': DateTime.now().toUtc().toIso8601String(),
+      });
+      return const Success(null);
+    } catch (e) {
+      return Error(UnknownFailure(cause: e));
+    }
+  }
 }

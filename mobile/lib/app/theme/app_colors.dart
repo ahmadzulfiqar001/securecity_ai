@@ -171,6 +171,8 @@ abstract final class AppColors {
   static const Color markerPolice = Color(0xFF1565C0);
   static const Color markerHospital = Color(0xFFD32F2F);
   static const Color markerFireStation = Color(0xFFE64A19);
+  static const Color markerShelter = Color(0xFF00897B);
+  static const Color markerPharmacy = Color(0xFF8E24AA);
   static const Color markerIncident = emergencyOrange;
   static const Color markerUser = accentCyan;
   static const Color markerSafeZone = successGreen;

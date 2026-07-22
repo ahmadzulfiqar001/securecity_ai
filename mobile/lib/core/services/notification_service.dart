@@ -103,7 +103,15 @@ class NotificationService {
   /// Show a locally-generated alert with no backing FCM message - used by
   /// GeofenceService for zone enter/exit alerts, which are computed
   /// entirely on-device from the location stream.
-  Future<void> showGeofenceAlert({required int id, required String title, required String body}) async {
+  Future<void> showGeofenceAlert({required int id, required String title, required String body}) =>
+      showNotification(id: id, title: title, body: body);
+
+  /// Show a locally-generated alert for anything else that isn't a
+  /// [RemoteMessage] but should still pop up like a normal push - used by
+  /// [NotificationsWatcher] for new entries in the per-user Firestore
+  /// `notifications` collection, which otherwise only surface if the user
+  /// happens to open the in-app Notifications screen.
+  Future<void> showNotification({required int id, required String title, required String body}) async {
     await _localNotifications.show(
       id,
       title,

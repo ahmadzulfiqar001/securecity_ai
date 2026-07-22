@@ -172,11 +172,18 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     }).toList();
   }
 
+  (IconData, Color) _serviceMarkerStyle(String type) => switch (type) {
+        NearbyServiceType.police => (Icons.local_police, AppColors.markerPolice),
+        NearbyServiceType.hospital => (Icons.local_hospital, AppColors.markerHospital),
+        NearbyServiceType.fireStation => (Icons.local_fire_department, AppColors.markerFireStation),
+        NearbyServiceType.shelter => (Icons.home, AppColors.markerShelter),
+        NearbyServiceType.pharmacy => (Icons.local_pharmacy, AppColors.markerPharmacy),
+        _ => (Icons.place, AppColors.darkTextSecondary),
+      };
+
   List<Marker> _buildServiceMarkers(List<NearbyServiceEntity> services) {
-    return services
-        .where((s) => s.type == NearbyServiceType.police || s.type == NearbyServiceType.hospital)
-        .map((s) {
-      final isPolice = s.type == NearbyServiceType.police;
+    return services.map((s) {
+      final (icon, color) = _serviceMarkerStyle(s.type);
       return Marker(
         point: LatLng(s.latitude, s.longitude),
         width: 36,
@@ -185,11 +192,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           onTap: () => ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('${s.name} · ${NearbyServiceType.label(s.type)}')),
           ),
-          child: Icon(
-            isPolice ? Icons.local_police : Icons.local_hospital,
-            color: isPolice ? AppColors.markerPolice : AppColors.markerHospital,
-            size: 32,
-          ),
+          child: Icon(icon, color: color, size: 32),
         ),
       );
     }).toList();

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/routes/app_routes.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/services/shake_detector.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_theme.dart';
@@ -11,11 +12,25 @@ import '../../../core/providers/app_providers.dart';
 import '../../../core/providers/session_providers.dart';
 import '../../../core/utils/responsive.dart';
 import '../../../shared/widgets/glow_orb.dart';
+import '../../emergency_contacts/presentation/providers/emergency_contacts_providers.dart';
+import '../../incident/presentation/providers/incident_providers.dart';
 import '../../map/presentation/providers/map_providers.dart';
+import '../../notifications/presentation/providers/notifications_providers.dart';
+import '../../safety_alerts/presentation/providers/safety_alerts_providers.dart';
+import '../../weather/presentation/providers/weather_providers.dart';
 import 'providers/home_providers.dart';
 import 'widgets/alert_item.dart';
+import 'widgets/emergency_contacts_quick_card.dart';
 import 'widgets/quick_action_card.dart';
+import 'widgets/recent_report_tile.dart';
 import 'widgets/safety_score_card.dart';
+import 'widgets/weather_strip.dart';
+
+String _safetyLabel(double score) {
+  if (score >= AppConstants.safetyScoreSafeThreshold) return 'High Safety Score';
+  if (score >= AppConstants.safetyScoreCautionThreshold) return 'Moderate Safety Score';
+  return 'Low Safety Score - Exercise Caution';
+}
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -67,6 +82,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // Keeps client-side geofence monitoring (features/map/presentation/providers/map_providers.dart)
     // alive for as long as the user is signed in and on the home screen.
     ref.watch(geofenceMonitorProvider);
+    // Same for the Firestore notifications watcher, so a new alert pops up
+    // as a local notification instead of only appearing when the user
+    // happens to open the Notifications screen.
+    ref.watch(notificationsWatcherProvider);
 
     return Scaffold(
       backgroundColor: AppColors.darkBackground,
@@ -141,8 +160,12 @@ class _HomeTab extends ConsumerWidget {
     final user = ref.watch(currentUserProvider);
     final userName = user?.fullName ?? 'Citizen';
     final columns = context.gridColumns;
-    final safetyScore = ref.watch(safetyScoreProvider);
-    final recentAlerts = ref.watch(recentAlertsProvider);
+
+    final weatherAsync = ref.watch(currentWeatherProvider);
+    final safetyZoneAsync = ref.watch(nearestSafetyZoneProvider);
+    final contactsAsync = ref.watch(emergencyContactsStreamProvider);
+    final alertsAsync = ref.watch(recentSafetyAlertsProvider);
+    final reportsAsync = ref.watch(myRecentReportsProvider);
 
     return SafeArea(
       child: ListView(
@@ -174,12 +197,45 @@ class _HomeTab extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
-          SafetyScoreCard(
-            score: safetyScore.score,
-            label: safetyScore.label,
-            summary: safetyScore.summary,
+          // Weather - silently absent until an authority/pipeline publishes data.
+          weatherAsync.when(
+            data: (weather) => weather == null
+                ? const SizedBox.shrink()
+                : Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: WeatherStrip(weather: weather),
+                  ),
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
+
+          // Live Safety Score
+          safetyZoneAsync.when(
+            data: (zone) => zone == null
+                ? const SizedBox.shrink()
+                : SafetyScoreCard(
+                    score: zone.safetyScore,
+                    label: _safetyLabel(zone.safetyScore),
+                    summary: zone.summary.isEmpty ? zone.zoneName : zone.summary,
+                  ),
+            loading: () => const SizedBox(
+              height: 138,
+              child: Center(child: CircularProgressIndicator(color: AppColors.accentCyan)),
+            ),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
+          const SizedBox(height: 16),
+
+          // Emergency Contacts quick-glance
+          contactsAsync.when(
+            data: (contacts) => EmergencyContactsQuickCard(
+              contacts: contacts,
+              onTap: () => context.push(AppRoutes.emergencyContacts),
+            ),
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
           ),
           const SizedBox(height: 32),
 
@@ -193,6 +249,13 @@ class _HomeTab extends ConsumerWidget {
             crossAxisSpacing: 16,
             childAspectRatio: 1.3,
             children: [
+              QuickActionCard(
+                title: 'Quick SOS',
+                subtitle: 'Emergency alert',
+                icon: Icons.sos_rounded,
+                color: AppColors.emergencyRed,
+                onTap: () => context.push(AppRoutes.sos),
+              ),
               QuickActionCard(
                 title: 'Report Incident',
                 subtitle: 'Submit evidence',
@@ -225,17 +288,52 @@ class _HomeTab extends ConsumerWidget {
           ).animate().fadeIn(delay: AppDurations.fast, duration: AppDurations.slow),
           const SizedBox(height: 32),
 
-          Text('Recent Safety Alerts', style: AppTypography.darkTitleMedium.copyWith(fontSize: 18)),
+          // Recent Reports - the signed-in user's own incident reports.
+          reportsAsync.when(
+            data: (reports) => reports.isEmpty
+                ? const SizedBox.shrink()
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Recent Reports', style: AppTypography.darkTitleMedium.copyWith(fontSize: 18)),
+                      const SizedBox(height: 16),
+                      for (final report in reports) RecentReportTile(incident: report),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
+
+          Text('Nearby Alerts', style: AppTypography.darkTitleMedium.copyWith(fontSize: 18)),
           const SizedBox(height: 16),
-          for (final alert in recentAlerts)
-            AlertItem(
-              title: alert.title,
-              body: alert.body,
-              time: alert.time,
-              type: alert.type,
-            ),
+          alertsAsync.when(
+            data: (alerts) => alerts.isEmpty
+                ? Text('No active alerts near you.', style: AppTypography.darkBodySmall)
+                : Column(
+                    children: [
+                      for (final alert in alerts)
+                        AlertItem(
+                          title: alert.title,
+                          body: alert.body,
+                          time: _relativeTime(alert.createdAt),
+                          type: alert.type,
+                        ),
+                    ],
+                  ),
+            loading: () => const Center(child: CircularProgressIndicator(color: AppColors.accentCyan)),
+            error: (_, __) => Text('Could not load alerts.', style: AppTypography.darkBodySmall),
+          ),
         ],
       ),
     );
+  }
+
+  String _relativeTime(DateTime time) {
+    final diff = DateTime.now().difference(time);
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} min${diff.inMinutes == 1 ? '' : 's'} ago';
+    if (diff.inHours < 24) return '${diff.inHours} hour${diff.inHours == 1 ? '' : 's'} ago';
+    return '${diff.inDays} day${diff.inDays == 1 ? '' : 's'} ago';
   }
 }

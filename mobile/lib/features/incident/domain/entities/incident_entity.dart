@@ -4,6 +4,10 @@
 /// are added later by the triage pipeline - see `IncidentModel` for the
 /// full record shape once those are populated.
 class IncidentEntity {
+  /// Firestore document id. Absent when constructing a new report to
+  /// submit (see [IncidentRepository.newIncidentId]); populated when
+  /// reading reports back (see [IncidentRepository.watchMyReports]).
+  final String? id;
   final String reporterId;
   final String title;
   final String description;
@@ -18,6 +22,7 @@ class IncidentEntity {
   final String updatedAt;
 
   IncidentEntity({
+    this.id,
     required this.reporterId,
     required this.title,
     required this.description,

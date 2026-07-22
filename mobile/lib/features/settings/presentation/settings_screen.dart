@@ -121,11 +121,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'SOS Countdown: $_sosCountdownSeconds seconds',
+                  'SOS Hold Duration: $_sosCountdownSeconds seconds',
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
                 Text(
-                  'Time before an SOS alert is sent automatically',
+                  'How long you must hold the SOS button before an alert is sent',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 Slider(

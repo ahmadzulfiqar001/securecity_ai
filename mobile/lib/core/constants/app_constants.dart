@@ -29,6 +29,7 @@ abstract final class AppConstants {
   static const String colChatMessages = 'chat_messages';
   static const String colSosEvents = 'sos_events';
   static const String colUserActivity = 'user_activity';
+  static const String colWeatherData = 'weather_data';
 
   // Firebase Storage Buckets / Paths
   static const String storageIncidentMedia = 'incidents/media';

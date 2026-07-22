@@ -17,10 +17,17 @@ class AlertItem extends StatelessWidget {
   final String time;
   final String type;
 
+  (IconData, Color) get _style => switch (type) {
+        'flood' => (Icons.tsunami, AppColors.emergencyRed),
+        'crime' => (Icons.local_police, AppColors.emergencyOrange),
+        'traffic' => (Icons.traffic, AppColors.warningAmber),
+        'weather' => (Icons.cloud_outlined, AppColors.infoBlue),
+        _ => (Icons.notifications_active_outlined, AppColors.accentCyan),
+      };
+
   @override
   Widget build(BuildContext context) {
-    final icon = type == 'flood' ? Icons.tsunami : Icons.traffic;
-    final color = type == 'flood' ? AppColors.emergencyRed : AppColors.warningAmber;
+    final (icon, color) = _style;
 
     return Semantics(
       label: '$title, $time. $body',

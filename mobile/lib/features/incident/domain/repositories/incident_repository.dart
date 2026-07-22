@@ -8,4 +8,8 @@ abstract class IncidentRepository {
   String newIncidentId();
 
   Future<Result<void>> submitIncident(String id, IncidentEntity incident);
+
+  /// The signed-in user's own reports, newest first - used by Home's
+  /// "Recent Reports" section.
+  Stream<List<IncidentEntity>> watchMyReports(String uid, {int limit = 5});
 }
