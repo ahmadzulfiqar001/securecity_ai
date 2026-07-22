@@ -1,5 +1,5 @@
 name: securecity_ai
-description: SecureCity AI — Intelligent Urban Safety Platform
+description: SecureCity AI - Intelligent Urban Safety Platform
 publish_to: "none"
 version: 1.0.0+1
 
@@ -64,7 +64,6 @@ dependencies:
   flutter_animate: ^4.5.0
   shimmer: ^3.0.0
   cached_network_image: ^3.3.0
-  google_fonts: ^6.2.0
 
   # Charts
   fl_chart: ^0.68.0
@@ -88,7 +87,7 @@ dev_dependencies:
   json_serializable: ^6.8.0
   riverpod_generator: ^2.3.0
 
-  # Test-only Firebase fakes — widget tests never touch real Firebase
+  # Test-only Firebase fakes - widget tests never touch real Firebase
   # plugin channels, so FirebaseAuth/Firestore providers are overridden
   # with these in tests.
   firebase_auth_mocks: ^0.14.0
@@ -100,7 +99,14 @@ flutter:
     - assets/images/
     - assets/animations/
     - assets/icons/
-  # Inter is loaded at runtime via the google_fonts package (see
-  # core/theme/app_typography.dart) rather than bundled here — swap to
-  # bundled .ttf assets under assets/fonts/ if the app needs to render
-  # correctly with no network access on first launch.
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Variable.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-Variable.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-Variable.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-Variable.ttf
+          weight: 700

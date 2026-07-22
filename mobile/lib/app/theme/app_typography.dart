@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
 /// Typography system for SecureCity AI using the Inter font family,
-/// loaded at runtime via google_fonts (see pubspec.yaml).
+/// bundled locally under assets/fonts/ (see pubspec.yaml) so the app
+/// renders correctly with no network access.
 abstract final class AppTypography {
   // ─────────────────────────────────────────────────────────────────────────
   // Base Text Style
   // ─────────────────────────────────────────────────────────────────────────
-  static final String _fontFamily = GoogleFonts.inter().fontFamily!;
+  static const String _fontFamily = 'Inter';
 
   static TextStyle _base({
     required double fontSize,
