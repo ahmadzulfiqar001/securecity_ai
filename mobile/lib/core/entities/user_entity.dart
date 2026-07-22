@@ -3,7 +3,7 @@ import 'emergency_contact_entity.dart';
 /// Shared user-profile domain entity. Lives in `core/` (not inside the
 /// `authentication` feature) because it's a cross-cutting concept many
 /// features legitimately need to read (home greeting, profile screen,
-/// incident reporterId, etc.) — keeping it here means those features
+/// incident reporterId, etc.) - keeping it here means those features
 /// depend on `core/`, never on the `authentication` feature directly.
 class UserEntity {
   final String id;

@@ -1,5 +1,5 @@
 /// A single recorded trip. Written by the future live Journey Tracking
-/// feature (not part of this pass) — this entity/repository only reads
+/// feature (not part of this pass) - this entity/repository only reads
 /// what's already in Firestore.
 class JourneyEntity {
   final String id;

@@ -24,7 +24,7 @@ class MapZoneRepositoryImpl implements MapZoneRepository {
       id: doc.id,
       name: data['name'] as String? ?? 'Unnamed Zone',
       type: data['type'] as String? ?? MapZoneType.emergency,
-      // Stored as an array of {lng, lat} maps, not an array of arrays —
+      // Stored as an array of {lng, lat} maps, not an array of arrays -
       // Firestore doesn't support nested arrays as a document field.
       polygon: (data['polygon'] as List<dynamic>? ?? [])
           .map((point) => point as Map<String, dynamic>)

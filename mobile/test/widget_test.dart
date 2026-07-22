@@ -27,7 +27,7 @@ void main() {
     expect(find.byType(MaterialApp), findsOneWidget);
 
     // SplashScreen holds a 3s Future.delayed before navigating, and the next
-    // screen runs flutter_animate entrance animations — settle both so no
+    // screen runs flutter_animate entrance animations - settle both so no
     // Timer is left pending at teardown.
     await tester.pump(const Duration(seconds: 4));
     await tester.pumpAndSettle(const Duration(seconds: 2));

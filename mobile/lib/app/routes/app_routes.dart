@@ -2,7 +2,7 @@
 ///
 /// Every screen previously referenced raw string literals (`'/login'`,
 /// `'/home'`, ...) duplicated across `app_router.dart` and ~29
-/// `context.go`/`context.push` call sites — a typo in any one of them would
+/// `context.go`/`context.push` call sites - a typo in any one of them would
 /// silently fail to navigate. This is the single source of truth instead.
 abstract final class AppRoutes {
   static const String splash = '/splash';

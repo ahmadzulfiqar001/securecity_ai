@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
 import '../models/user_model.dart';
 
-/// Local offline-first cache — not a source of truth. Auth tokens are
+/// Local offline-first cache - not a source of truth. Auth tokens are
 /// managed entirely by the Firebase Auth SDK and are never cached here.
 class StorageService {
   final SharedPreferences _prefs;

@@ -1,7 +1,7 @@
 import 'emergency_contact_model.dart';
 
 /// Shared user-profile data model (Firestore JSON mapping). Lives in
-/// `core/` alongside [UserEntity] for the same reason — both the
+/// `core/` alongside [UserEntity] for the same reason - both the
 /// `authentication` and `emergency_contacts` features need it, and
 /// features should depend on `core/`, not on each other.
 class UserModel {

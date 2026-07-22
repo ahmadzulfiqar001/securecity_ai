@@ -2,7 +2,7 @@ import '../../domain/entities/safety_alert_entity.dart';
 import '../../domain/entities/safety_score_entity.dart';
 import '../../domain/repositories/home_repository.dart';
 
-/// Currently a local/static data source — the dashboard's safety score and
+/// Currently a local/static data source - the dashboard's safety score and
 /// alerts aren't wired to Firestore yet. Swapping this for a Firestore-
 /// backed implementation later is a drop-in change: the domain contract
 /// ([HomeRepository]) and presentation layer don't need to change.

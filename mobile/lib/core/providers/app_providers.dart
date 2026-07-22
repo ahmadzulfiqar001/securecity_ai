@@ -22,7 +22,7 @@ final storageServiceProvider = Provider<StorageService>((ref) {
 });
 
 // Dio and ApiClient providers live in core/network/api_client.dart
-// (riverpod codegen: dioProvider, apiClientProvider) — they carry the
+// (riverpod codegen: dioProvider, apiClientProvider) - they carry the
 // auth/retry/error/logging interceptors and must not be redeclared here.
 
 // Firebase Auth
@@ -50,7 +50,7 @@ final locationServiceProvider = Provider<LocationService>((ref) {
   return LocationService();
 });
 
-// Current device position — shared by any screen that needs to sort/filter
+// Current device position - shared by any screen that needs to sort/filter
 // by distance (Nearby Services, Area Safety).
 final currentPositionProvider = FutureProvider.autoDispose<Position?>((ref) {
   return ref.watch(locationServiceProvider).getCurrentLocation();

@@ -242,7 +242,7 @@ final class UnknownFailure extends Failure {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Result type — lightweight Either-like wrapper without external dependency
+// Result type - lightweight Either-like wrapper without external dependency
 // ─────────────────────────────────────────────────────────────────────────────
 
 /// A discriminated union result type: either [Success] with a value of type [T],

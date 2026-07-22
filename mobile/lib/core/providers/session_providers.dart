@@ -6,7 +6,7 @@ import '../entities/user_entity.dart';
 /// Thin façade over the `authentication` feature's [authNotifierProvider]
 /// so every other feature (home, profile, settings, ...) can read the
 /// signed-in user and sign out without importing `authentication`
-/// directly — only `core/` depends on it, keeping features independent
+/// directly - only `core/` depends on it, keeping features independent
 /// of each other.
 final currentUserProvider = Provider<UserEntity?>((ref) {
   return ref.watch(authNotifierProvider).user;

@@ -32,7 +32,7 @@ final geofenceServiceProvider = Provider<GeofenceService>((ref) => GeofenceServi
 /// `map_zones` stream and the device's location stream, and fires a local
 /// notification (via NotificationService) on zone enter/exit. Server-side
 /// geofencing (background/killed-app alerts via a Cloud Function) was
-/// explicitly scoped out — this only runs while the app is open.
+/// explicitly scoped out - this only runs while the app is open.
 class GeofenceMonitor {
   GeofenceMonitor({
     required MapZoneRepository zoneRepository,

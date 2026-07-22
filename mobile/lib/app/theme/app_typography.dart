@@ -31,7 +31,7 @@ abstract final class AppTypography {
   // Dark Theme Text Styles
   // ─────────────────────────────────────────────────────────────────────────
 
-  /// 57sp — App name, hero sections
+  /// 57sp - App name, hero sections
   static final TextStyle darkDisplayLarge = _base(
     fontSize: 57,
     fontWeight: FontWeight.w700,
@@ -40,7 +40,7 @@ abstract final class AppTypography {
     height: 1.12,
   );
 
-  /// 45sp — Screen-level headlines
+  /// 45sp - Screen-level headlines
   static final TextStyle darkDisplayMedium = _base(
     fontSize: 45,
     fontWeight: FontWeight.w700,
@@ -49,7 +49,7 @@ abstract final class AppTypography {
     height: 1.16,
   );
 
-  /// 36sp — Section emphasis
+  /// 36sp - Section emphasis
   static final TextStyle darkDisplaySmall = _base(
     fontSize: 36,
     fontWeight: FontWeight.w600,
@@ -58,7 +58,7 @@ abstract final class AppTypography {
     height: 1.22,
   );
 
-  /// 32sp — Card headers, large labels
+  /// 32sp - Card headers, large labels
   static final TextStyle darkHeadlineLarge = _base(
     fontSize: 32,
     fontWeight: FontWeight.w700,
@@ -67,7 +67,7 @@ abstract final class AppTypography {
     height: 1.25,
   );
 
-  /// 28sp — Sub-section headers
+  /// 28sp - Sub-section headers
   static final TextStyle darkHeadlineMedium = _base(
     fontSize: 28,
     fontWeight: FontWeight.w600,
@@ -76,7 +76,7 @@ abstract final class AppTypography {
     height: 1.29,
   );
 
-  /// 24sp — Dialog titles, prominent labels
+  /// 24sp - Dialog titles, prominent labels
   static final TextStyle darkHeadlineSmall = _base(
     fontSize: 24,
     fontWeight: FontWeight.w600,
@@ -85,7 +85,7 @@ abstract final class AppTypography {
     height: 1.33,
   );
 
-  /// 22sp — AppBar titles
+  /// 22sp - AppBar titles
   static final TextStyle darkTitleLarge = _base(
     fontSize: 22,
     fontWeight: FontWeight.w600,
@@ -94,7 +94,7 @@ abstract final class AppTypography {
     height: 1.27,
   );
 
-  /// 16sp — Card titles, list section headers
+  /// 16sp - Card titles, list section headers
   static final TextStyle darkTitleMedium = _base(
     fontSize: 16,
     fontWeight: FontWeight.w600,
@@ -103,7 +103,7 @@ abstract final class AppTypography {
     height: 1.5,
   );
 
-  /// 14sp — Item titles, button labels
+  /// 14sp - Item titles, button labels
   static final TextStyle darkTitleSmall = _base(
     fontSize: 14,
     fontWeight: FontWeight.w500,
@@ -112,7 +112,7 @@ abstract final class AppTypography {
     height: 1.43,
   );
 
-  /// 16sp — Long-form readable text
+  /// 16sp - Long-form readable text
   static final TextStyle darkBodyLarge = _base(
     fontSize: 16,
     fontWeight: FontWeight.w400,
@@ -121,7 +121,7 @@ abstract final class AppTypography {
     height: 1.5,
   );
 
-  /// 14sp — Supporting body text
+  /// 14sp - Supporting body text
   static final TextStyle darkBodyMedium = _base(
     fontSize: 14,
     fontWeight: FontWeight.w400,
@@ -130,7 +130,7 @@ abstract final class AppTypography {
     height: 1.43,
   );
 
-  /// 12sp — Captions, meta info
+  /// 12sp - Captions, meta info
   static final TextStyle darkBodySmall = _base(
     fontSize: 12,
     fontWeight: FontWeight.w400,
@@ -139,7 +139,7 @@ abstract final class AppTypography {
     height: 1.33,
   );
 
-  /// 14sp — Button text, tab labels
+  /// 14sp - Button text, tab labels
   static final TextStyle darkLabelLarge = _base(
     fontSize: 14,
     fontWeight: FontWeight.w600,
@@ -148,7 +148,7 @@ abstract final class AppTypography {
     height: 1.43,
   );
 
-  /// 12sp — Chips, badges
+  /// 12sp - Chips, badges
   static final TextStyle darkLabelMedium = _base(
     fontSize: 12,
     fontWeight: FontWeight.w500,
@@ -157,7 +157,7 @@ abstract final class AppTypography {
     height: 1.33,
   );
 
-  /// 11sp — Navigation labels, tiny tags
+  /// 11sp - Navigation labels, tiny tags
   static final TextStyle darkLabelSmall = _base(
     fontSize: 11,
     fontWeight: FontWeight.w500,

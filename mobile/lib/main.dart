@@ -24,7 +24,7 @@ void main() async {
 
   // Initialize Firebase. Every provider in this app assumes a live Firebase
   // app (FirebaseAuth.instance, FirebaseFirestore.instance, etc. throw
-  // `[core/no-app]` otherwise) — if `flutterfire configure` hasn't been run
+  // `[core/no-app]` otherwise) - if `flutterfire configure` hasn't been run
   // yet, building the real widget tree would crash immediately, so show a
   // clear instruction screen instead of the app.
   var firebaseReady = true;

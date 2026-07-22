@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Animates a number counting up (or down) to [value] instead of jumping
-/// straight to it — e.g. a safety score gauge filling in on first paint.
+/// straight to it - e.g. a safety score gauge filling in on first paint.
 class AnimatedCounter extends StatelessWidget {
   const AnimatedCounter({
     super.key,

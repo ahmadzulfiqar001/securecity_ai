@@ -3,7 +3,7 @@ import '../../../../core/entities/emergency_contact_entity.dart';
 
 /// Emergency contacts are stored as an embedded list field on the
 /// `users/{uid}` document (see the auth feature's `UserModel.emergencyContacts`),
-/// not a subcollection — there are at most [AppConstants.sosMaxEmergencyContacts]
+/// not a subcollection - there are at most [AppConstants.sosMaxEmergencyContacts]
 /// per user, well within Firestore's single-document size limits.
 abstract class EmergencyContactsRepository {
   Stream<List<EmergencyContactEntity>> watchContacts(String uid);

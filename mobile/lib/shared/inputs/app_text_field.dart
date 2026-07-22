@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../app/theme/app_colors.dart';
 
-/// Standard text input — wraps [TextFormField] with the app's usual
+/// Standard text input - wraps [TextFormField] with the app's usual
 /// label/icon decoration (styling itself comes from the global
 /// `inputDecorationTheme`) and a built-in obscure-text toggle, replacing
 /// the `_obscurePassword` boolean + suffix `IconButton` that was

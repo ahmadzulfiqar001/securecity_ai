@@ -2,7 +2,7 @@ import '../../features/map/domain/entities/map_zone_entity.dart';
 
 /// Pure geofencing logic: point-in-polygon (ray casting) against a set of
 /// active zones, with enter/exit tracking across successive location
-/// updates. No Firestore/Geolocator dependency here — see
+/// updates. No Firestore/Geolocator dependency here - see
 /// features/map/presentation/providers/map_providers.dart for the stream
 /// wiring, and core/services/notification_service.dart for the alert delivery.
 class GeofenceService {
@@ -37,7 +37,7 @@ class GeofenceService {
   }
 
   /// Ray-casting point-in-polygon test. `polygon` is a ring of (lat, lng)
-  /// points (closed or open — the ring is implicitly closed); `point` is
+  /// points (closed or open - the ring is implicitly closed); `point` is
   /// (lat, lng). Returns false for degenerate polygons (< 3 points).
   bool containsPoint(List<(double lat, double lng)> polygon, (double lat, double lng) point) {
     if (polygon.length < 3) return false;

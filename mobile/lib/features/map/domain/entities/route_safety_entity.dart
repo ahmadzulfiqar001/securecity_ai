@@ -1,5 +1,5 @@
 /// Result of scoring a route's safety (`POST /predict/route-safety` on
-/// `ai_engine` — see `SafetyScorer.score_route()`). Segment/danger-zone
+/// `ai_engine` - see `SafetyScorer.score_route()`). Segment/danger-zone
 /// entries are kept as loose maps (`segment`/`lat`/`lon`/`safety_score`/
 /// `safety_level` and `lat`/`lon`/`score` respectively) matching the
 /// backend's exact response shape, rather than duplicating typed classes

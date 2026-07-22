@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../app/theme/app_colors.dart';
 
-/// Radial gradient backdrop — replaces the `AnimatedContainer` +
+/// Radial gradient backdrop - replaces the `AnimatedContainer` +
 /// `RadialGradient` pattern duplicated in onboarding and SOS. Wrap a
 /// screen's content with this instead of hand-rolling the gradient
 /// `Positioned.fill` each time.

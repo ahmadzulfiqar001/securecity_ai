@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../app/theme/app_colors.dart';
 
 /// Themed yes/no confirmation dialog. Returns `true` only if the user
-/// tapped confirm — dismissing (back button, tap-outside) returns `false`.
+/// tapped confirm - dismissing (back button, tap-outside) returns `false`.
 abstract final class ConfirmationDialog {
   static Future<bool> show(
     BuildContext context, {

@@ -75,7 +75,7 @@ class _AreaSafetyCard extends StatelessWidget {
   String get _label {
     if (zone.safetyScore >= AppConstants.safetyScoreSafeThreshold) return 'High Safety Score';
     if (zone.safetyScore >= AppConstants.safetyScoreCautionThreshold) return 'Moderate Safety Score';
-    return 'Low Safety Score — Exercise Caution';
+    return 'Low Safety Score - Exercise Caution';
   }
 
   @override

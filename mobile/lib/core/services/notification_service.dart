@@ -100,7 +100,7 @@ class NotificationService {
     }
   }
 
-  /// Show a locally-generated alert with no backing FCM message — used by
+  /// Show a locally-generated alert with no backing FCM message - used by
   /// GeofenceService for zone enter/exit alerts, which are computed
   /// entirely on-device from the location stream.
   Future<void> showGeofenceAlert({required int id, required String title, required String body}) async {

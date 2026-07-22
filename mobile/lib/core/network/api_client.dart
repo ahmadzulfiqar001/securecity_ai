@@ -12,7 +12,7 @@ part 'api_client.g.dart';
 // Providers
 //
 // This Dio instance talks only to the ai_engine / cv_engine microservices
-// (crime prediction, safety scoring, CV detection) — the ones Firebase can't
+// (crime prediction, safety scoring, CV detection) - the ones Firebase can't
 // host. Core app data (auth, users, incidents, SOS, notifications) goes
 // straight from the client to Firebase and never touches this client.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -29,7 +29,7 @@ ApiClient apiClient(Ref ref) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Factory — assembles Dio with interceptors
+// Factory - assembles Dio with interceptors
 // ─────────────────────────────────────────────────────────────────────────────
 
 abstract final class ApiClientFactory {
@@ -62,7 +62,7 @@ abstract final class ApiClientFactory {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ApiClient — typed request helpers
+// ApiClient - typed request helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
 class ApiClient {
@@ -70,7 +70,7 @@ class ApiClient {
 
   const ApiClient(this._dio);
 
-  /// GET request — returns decoded data or throws [Failure].
+  /// GET request - returns decoded data or throws [Failure].
   Future<T> get<T>(
     String path, {
     Map<String, dynamic>? queryParameters,
@@ -267,7 +267,7 @@ class ApiClient {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Auth Interceptor — attaches the current Firebase ID token to every request.
+// Auth Interceptor - attaches the current Firebase ID token to every request.
 //
 // The Firebase Auth SDK caches and auto-refreshes ID tokens internally, so
 // there is no manual refresh-token bookkeeping here: getIdToken() returns a
@@ -312,7 +312,7 @@ class _AuthInterceptor extends Interceptor {
         final retryResponse = await Dio().fetch(err.requestOptions);
         handler.resolve(retryResponse);
       } catch (_) {
-        // Refresh failed — propagate original error
+        // Refresh failed - propagate original error
         handler.next(err);
       }
     } else {
@@ -322,7 +322,7 @@ class _AuthInterceptor extends Interceptor {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Retry Interceptor — exponential backoff for transient errors
+// Retry Interceptor - exponential backoff for transient errors
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _RetryInterceptor extends Interceptor {
@@ -361,7 +361,7 @@ class _RetryInterceptor extends Interceptor {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Error Interceptor — normalizes error responses
+// Error Interceptor - normalizes error responses
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _ErrorInterceptor extends Interceptor {
@@ -381,7 +381,7 @@ class _ErrorInterceptor extends Interceptor {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Logging Interceptor — structured request/response logging
+// Logging Interceptor - structured request/response logging
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _LoggingInterceptor extends Interceptor {
@@ -411,7 +411,7 @@ class _LoggingInterceptor extends Interceptor {
       // ignore: avoid_print
       print(
         '[API] ✗ ${err.response?.statusCode ?? err.type.name} '
-        '${err.requestOptions.uri} — ${err.message}',
+        '${err.requestOptions.uri} - ${err.message}',
       );
       return true;
     }());

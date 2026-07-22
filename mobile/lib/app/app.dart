@@ -7,7 +7,7 @@ import 'routes/app_router.dart';
 import 'theme/app_colors.dart';
 import 'theme/app_theme.dart';
 
-/// Shown instead of [SecureCityApp] when `Firebase.initializeApp()` fails —
+/// Shown instead of [SecureCityApp] when `Firebase.initializeApp()` fails -
 /// every provider in this app assumes a live Firebase app, so building the
 /// real widget tree would crash immediately without this guard.
 class FirebaseNotConfiguredApp extends StatelessWidget {

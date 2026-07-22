@@ -87,7 +87,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           border: Border(top: BorderSide(color: AppColors.glassWhite10, width: 1)),
         ),
         child: BottomNavigationBar(
-          // Home (index 0) is the only tab that ever renders in place —
+          // Home (index 0) is the only tab that ever renders in place -
           // Map/SOS/Chat/Profile are pushed as full routes, so the bar
           // always shows Home selected rather than "sticking" on whichever
           // was tapped last.

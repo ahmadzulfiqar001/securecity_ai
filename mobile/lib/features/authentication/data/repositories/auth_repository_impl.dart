@@ -10,7 +10,7 @@ import '../../domain/repositories/auth_repository.dart';
 import '../../../../core/models/user_model.dart';
 
 /// Auth is handled by Firebase Auth; user profiles live in the Firestore
-/// `users` collection (doc id == Firebase UID) — there is no custom backend
+/// `users` collection (doc id == Firebase UID) - there is no custom backend
 /// in the loop. [StorageService] is only used as a local offline-first cache
 /// of the profile, not as a source of truth.
 class AuthRepositoryImpl implements AuthRepository {

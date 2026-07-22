@@ -26,7 +26,7 @@ import '../../features/services/presentation/nearby_services_screen.dart';
 import '../../features/area_safety/presentation/area_safety_screen.dart';
 
 /// Bridges a [Stream] (Firebase's `authStateChanges()`) to a [Listenable]
-/// so GoRouter re-evaluates `redirect` whenever auth state changes —
+/// so GoRouter re-evaluates `redirect` whenever auth state changes -
 /// without this, signing out on a protected screen wouldn't redirect
 /// until the next explicit navigation.
 class GoRouterRefreshStream extends ChangeNotifier {

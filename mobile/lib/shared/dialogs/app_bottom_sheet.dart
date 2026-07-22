@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Shows a themed modal bottom sheet (styling comes from the global
-/// `bottomSheetTheme` — rounded top corners, drag handle). Named
+/// `bottomSheetTheme` - rounded top corners, drag handle). Named
 /// `AppBottomSheet` rather than `BottomSheet` to avoid shadowing Flutter's
 /// own [BottomSheet] widget.
 abstract final class AppBottomSheet {

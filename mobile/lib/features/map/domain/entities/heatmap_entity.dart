@@ -1,5 +1,5 @@
 /// One grid cell of the AI-generated crime density heatmap
-/// (`GET /predict/heatmap` on `ai_engine` — see `heatmap_service.py`).
+/// (`GET /predict/heatmap` on `ai_engine` - see `heatmap_service.py`).
 class HeatmapCellEntity {
   final double lat;
   final double lng;

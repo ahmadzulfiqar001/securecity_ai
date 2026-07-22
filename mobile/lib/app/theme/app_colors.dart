@@ -63,7 +63,7 @@ abstract final class AppColors {
   static const Color lightBorder = Color(0xFFCDD0F0);
 
   // ─────────────────────────────────────────────────────────────────────────
-  // Text Colors — Dark Theme
+  // Text Colors - Dark Theme
   // ─────────────────────────────────────────────────────────────────────────
   static const Color darkTextPrimary = Color(0xFFF0F0FF);
   static const Color darkTextSecondary = Color(0xFFAAAAAA);
@@ -71,7 +71,7 @@ abstract final class AppColors {
   static const Color darkTextHint = Color(0xFF666688);
 
   // ─────────────────────────────────────────────────────────────────────────
-  // Text Colors — Light Theme
+  // Text Colors - Light Theme
   // ─────────────────────────────────────────────────────────────────────────
   static const Color lightTextPrimary = Color(0xFF0A0A1A);
   static const Color lightTextSecondary = Color(0xFF444466);

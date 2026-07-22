@@ -3,7 +3,7 @@ import '../../app/theme/app_colors.dart';
 
 enum AppButtonVariant { primary, outlined, text }
 
-/// Primary reusable button with a built-in loading state — replaces the
+/// Primary reusable button with a built-in loading state - replaces the
 /// hand-rolled `SizedBox(child: CircularProgressIndicator())` swap that was
 /// duplicated across login, register, and report-incident submit buttons.
 class AppButton extends StatelessWidget {

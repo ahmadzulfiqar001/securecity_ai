@@ -1,7 +1,7 @@
 /// A citizen-submitted incident report, as captured by the report form.
 /// Server/dashboard-assigned fields (Firestore doc id, assigned officer,
 /// timeline, AI classification, resolvedAt) aren't part of submission and
-/// are added later by the triage pipeline — see `IncidentModel` for the
+/// are added later by the triage pipeline - see `IncidentModel` for the
 /// full record shape once those are populated.
 class IncidentEntity {
   final String reporterId;
