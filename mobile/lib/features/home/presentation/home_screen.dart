@@ -12,6 +12,7 @@ import '../../../core/providers/session_providers.dart';
 import '../../../core/utils/responsive.dart';
 import '../../../shared/widgets/glow_orb.dart';
 import '../../map/presentation/providers/map_providers.dart';
+import 'providers/home_providers.dart';
 import 'widgets/alert_item.dart';
 import 'widgets/quick_action_card.dart';
 import 'widgets/safety_score_card.dart';
@@ -140,6 +141,8 @@ class _HomeTab extends ConsumerWidget {
     final user = ref.watch(currentUserProvider);
     final userName = user?.fullName ?? 'Citizen';
     final columns = context.gridColumns;
+    final safetyScore = ref.watch(safetyScoreProvider);
+    final recentAlerts = ref.watch(recentAlertsProvider);
 
     return SafeArea(
       child: ListView(
@@ -173,10 +176,10 @@ class _HomeTab extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
 
-          const SafetyScoreCard(
-            score: 85,
-            label: 'High Safety Score',
-            summary: 'Lighting is good. No active incidents within 1km reported recently.',
+          SafetyScoreCard(
+            score: safetyScore.score,
+            label: safetyScore.label,
+            summary: safetyScore.summary,
           ),
           const SizedBox(height: 32),
 
@@ -224,18 +227,13 @@ class _HomeTab extends ConsumerWidget {
 
           Text('Recent Safety Alerts', style: AppTypography.darkTitleMedium.copyWith(fontSize: 18)),
           const SizedBox(height: 16),
-          const AlertItem(
-            title: 'Extreme Rainfall Alert',
-            body: 'Urban flooding threat in Gulshan area. Avoid low-lying roads.',
-            time: '10 mins ago',
-            type: 'flood',
-          ),
-          const AlertItem(
-            title: 'Road Blockage',
-            body: 'Protest in Saddar causing heavy delays. Traffic diverted.',
-            time: '1 hour ago',
-            type: 'traffic',
-          ),
+          for (final alert in recentAlerts)
+            AlertItem(
+              title: alert.title,
+              body: alert.body,
+              time: alert.time,
+              type: alert.type,
+            ),
         ],
       ),
     );

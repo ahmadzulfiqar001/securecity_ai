@@ -10,7 +10,8 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_typography.dart';
 import '../../../core/utils/motion.dart';
 import '../../../shared/dialogs/app_snackbar.dart';
-import '../../../shared/buttons/danger_button.dart';
+import '../../../shared/buttons/emergency_button.dart';
+import '../../../shared/widgets/gradient_background.dart';
 import '../domain/entities/sos_event_entity.dart';
 import 'providers/sos_providers.dart';
 
@@ -116,25 +117,10 @@ class _SosScreenState extends ConsumerState<SosScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.darkBackground,
-      body: Stack(
-        children: [
-          // Radial red pulse background
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 600),
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                center: const Alignment(0, -0.1),
-                radius: 1.2,
-                colors: [
-                  _isSosTriggered
-                      ? AppColors.emergencyRed.withValues(alpha: 0.3)
-                      : AppColors.emergencyRed.withValues(alpha: 0.15),
-                  AppColors.darkBackground,
-                ],
-              ),
-            ),
-          ),
-          SafeArea(
+      body: GradientBackground(
+        accentColor: AppColors.emergencyRed,
+        intensity: _isSosTriggered ? 0.3 : 0.15,
+        child: SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(AppConstants.paddingLarge),
               child: Column(
@@ -204,7 +190,7 @@ class _SosScreenState extends ConsumerState<SosScreen> {
                           ),
                         ),
                         const SizedBox(height: AppConstants.paddingMedium),
-                        DangerButton(
+                        EmergencyButton(
                           label: 'I AM SAFE - END ALERTS',
                           onPressed: _cancelSos,
                         ),
@@ -216,10 +202,10 @@ class _SosScreenState extends ConsumerState<SosScreen> {
               ),
             ),
           ),
-        ],
-      ),
-    );
+        ),
+      );
   }
+
 
   Widget _buildCountdownCircle() {
     return Semantics(

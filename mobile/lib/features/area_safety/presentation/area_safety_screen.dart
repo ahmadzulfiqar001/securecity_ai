@@ -5,7 +5,9 @@ import 'package:geolocator/geolocator.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../app/theme/app_colors.dart';
-import '../../../shared/widgets/app_state_view.dart';
+import '../../../shared/widgets/loading_widget.dart';
+import '../../../shared/widgets/empty_state.dart';
+import '../../../shared/widgets/error_state.dart';
 import '../../../shared/cards/glass_card.dart';
 import '../domain/entities/area_safety_entity.dart';
 import 'providers/area_safety_providers.dart';
@@ -21,11 +23,11 @@ class AreaSafetyScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Area Safety')),
       body: zonesAsync.when(
-        loading: () => const AppLoadingView(),
-        error: (error, _) => AppErrorView(message: 'Failed to load area safety data: $error'),
+        loading: () => const LoadingWidget(),
+        error: (error, _) => ErrorState(message: 'Failed to load area safety data: $error'),
         data: (zones) {
           if (zones.isEmpty) {
-            return const AppEmptyView(
+            return const EmptyState(
               icon: Icons.shield_moon_outlined,
               message:
                   'No safety data available for your area yet.\nThe AI safety model is still being trained on this zone.',

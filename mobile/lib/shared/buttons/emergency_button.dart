@@ -5,8 +5,8 @@ import '../../app/theme/app_colors.dart';
 /// cancel SOS). Extracted from the `ElevatedButton.styleFrom(backgroundColor:
 /// AppColors.emergencyRed, ...)` override duplicated wherever a destructive
 /// action was needed.
-class DangerButton extends StatelessWidget {
-  const DangerButton({
+class EmergencyButton extends StatelessWidget {
+  const EmergencyButton({
     super.key,
     required this.label,
     required this.onPressed,

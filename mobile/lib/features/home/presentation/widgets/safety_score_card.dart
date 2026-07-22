@@ -5,6 +5,7 @@ import '../../../../app/theme/app_theme.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/utils/motion.dart';
 import '../../../../shared/cards/glass_card.dart';
+import '../../../../shared/widgets/animated_counter.dart';
 
 /// Circular gauge summarizing the user's current-zone safety score.
 class SafetyScoreCard extends StatelessWidget {
@@ -43,7 +44,10 @@ class SafetyScoreCard extends StatelessWidget {
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(score.toStringAsFixed(0), style: AppTypography.darkHeadlineSmall.copyWith(fontSize: 28)),
+                    AnimatedCounter(
+                      value: score,
+                      style: AppTypography.darkHeadlineSmall.copyWith(fontSize: 28),
+                    ),
                     Text('/100', style: AppTypography.darkLabelMedium),
                   ],
                 ),

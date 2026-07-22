@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers/app_providers.dart';
 import '../../../app/theme/app_colors.dart';
-import '../../../shared/widgets/app_state_view.dart';
+import '../../../shared/widgets/loading_widget.dart';
+import '../../../shared/widgets/empty_state.dart';
+import '../../../shared/widgets/error_state.dart';
 import '../../../shared/cards/glass_card.dart';
 import '../domain/entities/notification_entity.dart';
 import 'providers/notifications_providers.dart';
@@ -44,11 +46,11 @@ class NotificationsScreen extends ConsumerWidget {
         ],
       ),
       body: notificationsAsync.when(
-        loading: () => const AppLoadingView(),
-        error: (error, _) => AppErrorView(message: 'Failed to load notifications: $error'),
+        loading: () => const LoadingWidget(),
+        error: (error, _) => ErrorState(message: 'Failed to load notifications: $error'),
         data: (notifications) {
           if (notifications.isEmpty) {
-            return const AppEmptyView(
+            return const EmptyState(
               icon: Icons.notifications_none_outlined,
               message: 'No new alerts or warnings.',
             );

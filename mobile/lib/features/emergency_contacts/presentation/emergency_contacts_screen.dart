@@ -3,8 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers/app_providers.dart';
 import '../../../app/theme/app_colors.dart';
-import '../../../shared/widgets/app_state_view.dart';
+import '../../../shared/widgets/loading_widget.dart';
+import '../../../shared/widgets/empty_state.dart';
+import '../../../shared/widgets/error_state.dart';
 import '../../../shared/cards/glass_card.dart';
+import '../../../shared/dialogs/confirmation_dialog.dart';
+import '../../../shared/inputs/app_text_field.dart';
+import '../../../shared/widgets/avatar.dart';
 import '../../../core/entities/emergency_contact_entity.dart';
 import 'providers/emergency_contacts_providers.dart';
 
@@ -23,11 +28,11 @@ class EmergencyContactsScreen extends ConsumerWidget {
         child: const Icon(Icons.add, color: AppColors.primaryDeepBlue),
       ),
       body: contactsAsync.when(
-        loading: () => const AppLoadingView(),
-        error: (error, _) => AppErrorView(message: 'Failed to load contacts: $error'),
+        loading: () => const LoadingWidget(),
+        error: (error, _) => ErrorState(message: 'Failed to load contacts: $error'),
         data: (contacts) {
           if (contacts.isEmpty) {
-            return AppEmptyView(
+            return EmptyState(
               icon: Icons.contact_phone_outlined,
               message: 'No emergency contacts yet.\nAdd the people who should be notified when you trigger an SOS.',
               actionLabel: 'Add Contact',
@@ -43,12 +48,9 @@ class EmergencyContactsScreen extends ConsumerWidget {
                 margin: const EdgeInsets.only(bottom: 16),
                 padding: EdgeInsets.zero,
                 child: ListTile(
-                  leading: CircleAvatar(
+                  leading: Avatar(
+                    initials: contact.name.isNotEmpty ? contact.name[0].toUpperCase() : '?',
                     backgroundColor: AppColors.glassCyan10,
-                    child: Text(
-                      contact.name.isNotEmpty ? contact.name[0].toUpperCase() : '?',
-                      style: const TextStyle(color: AppColors.accentCyan, fontWeight: FontWeight.bold),
-                    ),
                   ),
                   title: Text(contact.name),
                   subtitle: Text('${contact.relationship} · ${contact.phone}'),
@@ -58,7 +60,7 @@ class EmergencyContactsScreen extends ConsumerWidget {
                       if (action == 'edit') {
                         _showContactDialog(context, ref, existing: contact);
                       } else if (action == 'delete') {
-                        _deleteContact(context, ref, contact.id);
+                        _deleteContact(context, ref, contact.id, contact.name);
                       }
                     },
                     itemBuilder: (context) => const [
@@ -75,7 +77,16 @@ class EmergencyContactsScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _deleteContact(BuildContext context, WidgetRef ref, String contactId) async {
+  Future<void> _deleteContact(BuildContext context, WidgetRef ref, String contactId, String name) async {
+    final confirmed = await ConfirmationDialog.show(
+      context,
+      title: 'Delete Contact',
+      message: 'Remove $name from your emergency contacts? They will no longer be notified when you trigger an SOS.',
+      confirmLabel: 'Delete',
+      isDestructive: true,
+    );
+    if (!confirmed) return;
+
     final uid = ref.read(firebaseAuthProvider).currentUser?.uid;
     if (uid == null) return;
     await ref.read(emergencyContactsRepositoryProvider).deleteContact(uid, contactId);
@@ -103,22 +114,22 @@ class EmergencyContactsScreen extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextFormField(
+              AppTextField(
+                label: 'Full Name',
                 controller: nameController,
-                decoration: const InputDecoration(labelText: 'Full Name'),
                 validator: (value) => (value == null || value.trim().isEmpty) ? 'Required' : null,
               ),
               const SizedBox(height: 12),
-              TextFormField(
+              AppTextField(
+                label: 'Phone Number',
                 controller: phoneController,
-                decoration: const InputDecoration(labelText: 'Phone Number'),
                 keyboardType: TextInputType.phone,
                 validator: (value) => (value == null || value.trim().isEmpty) ? 'Required' : null,
               ),
               const SizedBox(height: 12),
-              TextFormField(
+              AppTextField(
+                label: 'Relationship',
                 controller: relationshipController,
-                decoration: const InputDecoration(labelText: 'Relationship'),
                 validator: (value) => (value == null || value.trim().isEmpty) ? 'Required' : null,
               ),
             ],

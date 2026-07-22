@@ -7,9 +7,9 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../app/theme/app_colors.dart';
-import '../../../shared/buttons/danger_button.dart';
+import '../../../shared/buttons/emergency_button.dart';
 import '../../../shared/cards/glass_card.dart';
-import '../../../shared/widgets/section_header.dart';
+import '../../../shared/widgets/section_title.dart';
 import '../../../core/providers/session_providers.dart';
 import 'providers/theme_provider.dart';
 
@@ -45,7 +45,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
-          const SectionHeader(title: 'Appearance'),
+          const SectionTitle(title: 'Appearance'),
           const SizedBox(height: 12),
           GlassCard(
             child: SegmentedButton<ThemeMode>(
@@ -74,7 +74,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           const SizedBox(height: 32),
 
-          const SectionHeader(title: 'Safety & Alerts'),
+          const SectionTitle(title: 'Safety & Alerts'),
           const SizedBox(height: 12),
           GlassCard(
             padding: EdgeInsets.zero,
@@ -147,7 +147,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           const SizedBox(height: 32),
 
-          const SectionHeader(title: 'Legal'),
+          const SectionTitle(title: 'Legal'),
           const SizedBox(height: 12),
           GlassCard(
             padding: EdgeInsets.zero,
@@ -169,7 +169,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           const SizedBox(height: 40),
 
-          DangerButton(
+          EmergencyButton(
             label: 'Sign Out',
             icon: Icons.logout,
             onPressed: () async {

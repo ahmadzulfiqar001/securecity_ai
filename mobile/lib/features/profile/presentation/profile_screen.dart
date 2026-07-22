@@ -5,7 +5,8 @@ import '../../../app/routes/app_routes.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_typography.dart';
 import '../../../core/providers/session_providers.dart';
-import '../../../shared/buttons/danger_button.dart';
+import '../../../shared/buttons/emergency_button.dart';
+import '../../../shared/widgets/avatar.dart';
 import 'widgets/profile_menu_item.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -24,11 +25,7 @@ class ProfileScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const CircleAvatar(
-                radius: 54,
-                backgroundColor: AppColors.glassCyan20,
-                child: Icon(Icons.person, size: 64, color: AppColors.accentCyan),
-              ),
+              const Avatar(radius: 54),
               const SizedBox(height: 24),
               Text(user?.fullName ?? 'Citizen', style: AppTypography.darkTitleLarge),
               const SizedBox(height: 8),
@@ -50,7 +47,7 @@ class ProfileScreen extends ConsumerWidget {
                 onTap: () => context.push(AppRoutes.settings),
               ),
               const Spacer(),
-              DangerButton(
+              EmergencyButton(
                 label: 'Sign Out',
                 icon: Icons.logout,
                 onPressed: () async {

@@ -9,8 +9,10 @@ import '../../../../app/theme/app_theme.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/utils/motion.dart';
 import '../../../../core/utils/responsive.dart';
+import '../../../../shared/buttons/app_button.dart';
 import '../../../../shared/dialogs/app_snackbar.dart';
 import '../../../../shared/cards/glass_card.dart';
+import '../../../../shared/inputs/app_text_field.dart';
 import '../../../../shared/widgets/glow_orb.dart';
 import '../auth_notifier.dart';
 
@@ -25,7 +27,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -136,13 +137,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               // Email input
-                              TextFormField(
+                              AppTextField(
+                                label: 'Email Address',
                                 controller: _emailController,
+                                icon: Icons.email_outlined,
                                 keyboardType: TextInputType.emailAddress,
-                                decoration: const InputDecoration(
-                                  labelText: 'Email Address',
-                                  prefixIcon: Icon(Icons.email_outlined, color: AppColors.accentCyan),
-                                ),
                                 validator: (val) {
                                   if (val == null || val.isEmpty || !val.contains('@')) {
                                     return 'Enter a valid email address';
@@ -152,20 +151,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                               const SizedBox(height: AppConstants.paddingMedium),
                               // Password input
-                              TextFormField(
+                              AppTextField(
+                                label: 'Password',
                                 controller: _passwordController,
-                                obscureText: _obscurePassword,
-                                decoration: InputDecoration(
-                                  labelText: 'Password',
-                                  prefixIcon: const Icon(Icons.lock_outlined, color: AppColors.accentCyan),
-                                  suffixIcon: IconButton(
-                                    icon: Icon(
-                                      _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                                    ),
-                                    tooltip: _obscurePassword ? 'Show password' : 'Hide password',
-                                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                                  ),
-                                ),
+                                icon: Icons.lock_outlined,
+                                obscureText: true,
                                 validator: (val) {
                                   if (val == null || val.isEmpty || val.length < 6) {
                                     return 'Password must be at least 6 characters';
@@ -175,18 +165,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                               const SizedBox(height: AppConstants.paddingLarge),
                               // Sign In Button
-                              ElevatedButton(
-                                onPressed: authState.isLoading ? null : _handleLogin,
-                                child: authState.isLoading
-                                    ? const SizedBox(
-                                        height: 20,
-                                        width: 20,
-                                        child: CircularProgressIndicator(
-                                          color: AppColors.primaryDeepBlue,
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    : const Text('Sign In'),
+                              AppButton(
+                                label: 'Sign In',
+                                isLoading: authState.isLoading,
+                                onPressed: _handleLogin,
                               ),
                             ],
                           ),

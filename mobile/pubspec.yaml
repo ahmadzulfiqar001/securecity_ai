@@ -29,7 +29,7 @@ dependencies:
   # Sensors & Hardware
   sensors_plus: ^5.0.0
   local_auth: ^2.2.0
-  vibration: ^1.9.0
+  vibration: ^3.2.0
 
   # Media & Camera
   image_picker: ^1.1.0

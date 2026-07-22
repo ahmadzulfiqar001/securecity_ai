@@ -5,7 +5,9 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/providers/app_providers.dart';
 import '../../../app/theme/app_colors.dart';
-import '../../../shared/widgets/app_state_view.dart';
+import '../../../shared/widgets/loading_widget.dart';
+import '../../../shared/widgets/empty_state.dart';
+import '../../../shared/widgets/error_state.dart';
 import '../../../shared/cards/glass_card.dart';
 import '../domain/entities/nearby_service_entity.dart';
 import 'providers/nearby_services_providers.dart';
@@ -53,8 +55,8 @@ class _NearbyServicesScreenState extends ConsumerState<NearbyServicesScreen> {
           ),
           Expanded(
             child: servicesAsync.when(
-              loading: () => const AppLoadingView(),
-              error: (error, _) => AppErrorView(message: 'Failed to load nearby services: $error'),
+              loading: () => const LoadingWidget(),
+              error: (error, _) => ErrorState(message: 'Failed to load nearby services: $error'),
               data: (services) {
                 final position = positionAsync.value;
                 var filtered = _selectedType == null
@@ -76,7 +78,7 @@ class _NearbyServicesScreenState extends ConsumerState<NearbyServicesScreen> {
                 }
 
                 if (filtered.isEmpty) {
-                  return const AppEmptyView(
+                  return const EmptyState(
                     icon: Icons.local_hospital_outlined,
                     message: 'No nearby services found for this filter yet.',
                   );

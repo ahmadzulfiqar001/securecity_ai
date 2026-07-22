@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/theme/app_colors.dart';
-import '../../../shared/widgets/app_state_view.dart';
+import '../../../shared/widgets/loading_widget.dart';
+import '../../../shared/widgets/empty_state.dart';
+import '../../../shared/widgets/error_state.dart';
 import '../../../shared/cards/glass_card.dart';
 import '../domain/entities/journey_entity.dart';
 import 'providers/journey_history_providers.dart';
@@ -18,11 +20,11 @@ class JourneyHistoryScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Journey History')),
       body: journeysAsync.when(
-        loading: () => const AppLoadingView(),
-        error: (error, _) => AppErrorView(message: 'Failed to load journey history: $error'),
+        loading: () => const LoadingWidget(),
+        error: (error, _) => ErrorState(message: 'Failed to load journey history: $error'),
         data: (journeys) {
           if (journeys.isEmpty) {
-            return const AppEmptyView(
+            return const EmptyState(
               icon: Icons.route_outlined,
               message:
                   'No tracked journeys yet.\nStart Live Journey Tracking from the map to record a trip.',
