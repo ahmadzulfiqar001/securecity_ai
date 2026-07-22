@@ -12,6 +12,7 @@ import '../../features/splash/presentation/splash_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/authentication/presentation/login/login_screen.dart';
 import '../../features/authentication/presentation/register/register_screen.dart';
+import '../../features/authentication/presentation/forgot_password/forgot_password_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/sos/presentation/sos_screen.dart';
 import '../../features/map/presentation/map_screen.dart';
@@ -55,6 +56,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final loggedIn = user != null;
       final goingToAuth = state.matchedLocation == AppRoutes.login ||
           state.matchedLocation == AppRoutes.register ||
+          state.matchedLocation == AppRoutes.forgotPassword ||
           state.matchedLocation == AppRoutes.splash ||
           state.matchedLocation == AppRoutes.onboarding;
 
@@ -123,6 +125,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.register,
         builder: (BuildContext context, GoRouterState state) {
           return const RegisterScreen();
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.forgotPassword,
+        builder: (BuildContext context, GoRouterState state) {
+          return const ForgotPasswordScreen();
         },
       ),
       GoRoute(

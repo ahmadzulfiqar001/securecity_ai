@@ -163,7 +163,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   return null;
                                 },
                               ),
-                              const SizedBox(height: AppConstants.paddingLarge),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton(
+                                  onPressed: () => context.push(AppRoutes.forgotPassword),
+                                  child: Text(
+                                    'Forgot Password?',
+                                    style: AppTypography.darkBodySmall.copyWith(color: AppColors.accentCyan),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: AppConstants.paddingSmall),
                               // Sign In Button
                               AppButton(
                                 label: 'Sign In',

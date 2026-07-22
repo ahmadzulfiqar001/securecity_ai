@@ -96,6 +96,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
     return success;
   }
 
+  Future<bool> sendPasswordResetEmail(String email) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    final result = await _authRepository.sendPasswordResetEmail(email);
+
+    bool success = false;
+    result.fold(
+      onSuccess: (_) {
+        state = state.copyWith(isLoading: false);
+        success = true;
+      },
+      onError: (failure) {
+        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+      },
+    );
+    return success;
+  }
+
   Future<void> logout() async {
     state = state.copyWith(isLoading: true);
     await _authRepository.signOut();
