@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -52,6 +53,23 @@ void main() async {
     // Must be registered before runApp() so the background isolate picks
     // it up even if the app is killed shortly after this call returns.
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+    // App Check: Firebase AI Logic (features/chat's Gemini integration)
+    // rejects calls without it. Using the debug providers for now, which
+    // work immediately in development - on first run each prints a debug
+    // token to the device log that must be registered once in Firebase
+    // Console -> App Check -> "Manage debug tokens". Before a real release
+    // build, switch providerAndroid to const AndroidPlayIntegrityProvider()
+    // and providerApple to const AppleDeviceCheckProvider() (or
+    // AppleAppAttestProvider()).
+    try {
+      await FirebaseAppCheck.instance.activate(
+        providerAndroid: const AndroidDebugProvider(),
+        providerApple: const AppleDebugProvider(),
+      );
+    } catch (e) {
+      debugPrint('App Check activation skipped: $e');
+    }
 
     // Crashlytics: route every uncaught Flutter/Dart error to Firebase so
     // crashes in the field are visible instead of silently dropped.

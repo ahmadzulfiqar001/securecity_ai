@@ -6,6 +6,8 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../../../app/routes/app_routes.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_typography.dart';
+import '../../../core/constants/app_strings.dart';
+import 'providers/chat_providers.dart';
 
 class ChatbotScreen extends ConsumerStatefulWidget {
   const ChatbotScreen({super.key});
@@ -21,6 +23,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
 
   stt.SpeechToText? _speech;
   bool _isListening = false;
+  bool _isSending = false;
 
   @override
   void initState() {
@@ -29,7 +32,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     // Welcome message
     _messages.add(
       ChatMessage(
-        text: "Assalam-o-Alaikum! I am your SecureCity AI Safety Assistant. How can I help you today? You can ask me for first aid steps, safety guidelines, or nearby emergency locations.",
+        text: AppStrings.chatbotGreeting,
         isUser: false,
         timestamp: DateTime.now(),
       ),
@@ -55,45 +58,42 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     });
   }
 
-  Future<void> _sendMessage() async {
-    final text = _textController.text.trim();
-    if (text.isEmpty) return;
+  Future<void> _sendMessage([String? presetText]) async {
+    final text = (presetText ?? _textController.text).trim();
+    if (text.isEmpty || _isSending) return;
 
     _textController.clear();
     setState(() {
-      _messages.add(
-        ChatMessage(
-          text: text,
-          isUser: true,
-          timestamp: DateTime.now(),
-        ),
-      );
+      _messages.add(ChatMessage(text: text, isUser: true, timestamp: DateTime.now()));
+      _isSending = true;
     });
     _scrollToBottom();
 
-    // Trigger AI response simulation (Gemini API integration point)
-    await Future.delayed(const Duration(seconds: 1));
+    final chatRepository = ref.read(chatRepositoryProvider);
+    final result = await chatRepository.sendMessage(text);
 
-    String reply = "I've received your query. In case of immediate physical threat, please press the emergency SOS button on the home screen to contact dispatchers.";
+    if (!mounted) return;
 
-    if (text.toLowerCase().contains('burn')) {
-      reply = "First Aid for Burns:\n1. Cool the burn under cold running water for 10-20 minutes.\n2. Do NOT apply ice or butter.\n3. Cover with a clean, non-stick bandage or plastic wrap.\n4. Seek medical attention if it is severe.";
-    } else if (text.toLowerCase().contains('earthquake')) {
-      reply = "Earthquake Safety Steps:\n1. Drop, Cover, and Hold On under heavy furniture.\n2. Stay away from windows and brick walls.\n3. If outside, find a clear area away from buildings and power lines.";
-    }
-
-    if (mounted) {
-      setState(() {
-        _messages.add(
-          ChatMessage(
-            text: reply,
+    result.fold(
+      onSuccess: (reply) {
+        setState(() {
+          _messages.add(ChatMessage(text: reply, isUser: false, timestamp: DateTime.now()));
+          _isSending = false;
+        });
+      },
+      onError: (failure) {
+        setState(() {
+          _messages.add(ChatMessage(
+            text: failure.message,
             isUser: false,
             timestamp: DateTime.now(),
-          ),
-        );
-      });
-      _scrollToBottom();
-    }
+            isError: true,
+          ));
+          _isSending = false;
+        });
+      },
+    );
+    _scrollToBottom();
   }
 
   Future<void> _toggleListening() async {
@@ -129,19 +129,25 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
           tooltip: 'Back to home',
           onPressed: () => context.go(AppRoutes.home),
         ),
-        title: const Row(
+        title: Row(
           children: [
-            CircleAvatar(
+            const CircleAvatar(
               backgroundColor: AppColors.accentCyan,
               radius: 16,
               child: Icon(Icons.support_agent, color: AppColors.primaryDeepBlue, size: 20),
             ),
-            SizedBox(width: 12),
+            const SizedBox(width: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Safety AI Assistant'),
-                Text('Online', style: TextStyle(color: AppColors.successGreen, fontSize: 11)),
+                const Text('Safety AI Assistant'),
+                Text(
+                  _isSending ? AppStrings.chatbotTyping : 'Online',
+                  style: TextStyle(
+                    color: _isSending ? AppColors.darkTextSecondary : AppColors.successGreen,
+                    fontSize: 11,
+                  ),
+                ),
               ],
             ),
           ],
@@ -169,18 +175,20 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
             child: Row(
               children: [
                 _SuggestionChip(
-                  label: "First Aid for Burns",
-                  onTap: () {
-                    _textController.text = "First Aid for Burns";
-                    _sendMessage();
-                  },
+                  label: 'Safety Advice',
+                  onTap: () => _sendMessage('Give me some general safety advice for being out in the city.'),
                 ),
                 _SuggestionChip(
-                  label: "Earthquake Safety Steps",
-                  onTap: () {
-                    _textController.text = "Earthquake Safety Steps";
-                    _sendMessage();
-                  },
+                  label: 'Emergency Help',
+                  onTap: () => _sendMessage('What should I do right now if I\'m in a medical emergency?'),
+                ),
+                _SuggestionChip(
+                  label: 'Crime Questions',
+                  onTap: () => _sendMessage('How can I protect myself from common crimes in my area?'),
+                ),
+                _SuggestionChip(
+                  label: 'Nearby Services',
+                  onTap: () => _sendMessage('What emergency services are near me right now?'),
                 ),
               ],
             ),
@@ -198,8 +206,9 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                 Expanded(
                   child: TextField(
                     controller: _textController,
-                    decoration: const InputDecoration(
-                      hintText: 'Type safety query or guidelines...',
+                    enabled: !_isSending,
+                    decoration: InputDecoration(
+                      hintText: _isSending ? AppStrings.chatbotTyping : AppStrings.chatbotPlaceholder,
                       border: InputBorder.none,
                     ),
                     onSubmitted: (_) => _sendMessage(),
@@ -211,12 +220,18 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                     color: _isListening ? AppColors.emergencyRed : AppColors.accentCyan,
                   ),
                   tooltip: _isListening ? 'Stop voice input' : 'Start voice input',
-                  onPressed: _toggleListening,
+                  onPressed: _isSending ? null : _toggleListening,
                 ),
                 IconButton(
-                  icon: const Icon(Icons.send, color: AppColors.accentCyan),
+                  icon: _isSending
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accentCyan),
+                        )
+                      : const Icon(Icons.send, color: AppColors.accentCyan),
                   tooltip: 'Send message',
-                  onPressed: _sendMessage,
+                  onPressed: _isSending ? null : () => _sendMessage(),
                 ),
               ],
             ),
@@ -231,11 +246,13 @@ class ChatMessage {
   final String text;
   final bool isUser;
   final DateTime timestamp;
+  final bool isError;
 
   ChatMessage({
     required this.text,
     required this.isUser,
     required this.timestamp,
+    this.isError = false,
   });
 }
 
@@ -247,7 +264,9 @@ class _ChatBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final align = message.isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start;
-    final color = message.isUser ? AppColors.accentCyan : AppColors.darkCard;
+    final color = message.isUser
+        ? AppColors.accentCyan
+        : (message.isError ? AppColors.emergencyRedGlow : AppColors.darkCard);
     final textColor = message.isUser ? AppColors.primaryDeepBlue : AppColors.darkTextPrimary;
     final border = message.isUser
         ? const BorderRadius.only(

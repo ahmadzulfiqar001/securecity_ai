@@ -11,14 +11,23 @@ dependencies:
     sdk: flutter
 
   # Firebase
-  firebase_core: ^3.0.0
-  firebase_auth: ^5.0.0
-  cloud_firestore: ^5.0.0
-  firebase_storage: ^12.0.0
-  firebase_messaging: ^15.0.0
-  firebase_analytics: ^11.6.0
-  firebase_crashlytics: ^4.3.10
-  firebase_remote_config: ^5.5.0
+  # Bumped from the 3.x/5.x/12.x generation to the 4.x/6.x/13.x generation
+  # as a set (Firebase Flutter plugins must stay on the same generation to
+  # interoperate) - required by firebase_app_check below, which only
+  # supports firebase_core >=4.12.1.
+  firebase_core: ^4.12.1
+  firebase_auth: ^6.5.6
+  cloud_firestore: ^6.7.1
+  firebase_storage: ^13.4.5
+  firebase_messaging: ^16.4.3
+  firebase_analytics: ^12.4.5
+  firebase_crashlytics: ^5.2.6
+  firebase_remote_config: ^6.5.5
+  # Firebase AI Logic (Gemini Developer API backend - no billing account
+  # required, unlike the Vertex AI backend) + App Check, which AI Logic
+  # requires to authorize calls.
+  firebase_ai: ^3.14.1
+  firebase_app_check: ^0.4.5+2
 
   # State Management & Navigation
   flutter_riverpod: ^2.5.0
@@ -95,9 +104,10 @@ dev_dependencies:
 
   # Test-only Firebase fakes - widget tests never touch real Firebase
   # plugin channels, so FirebaseAuth/Firestore providers are overridden
-  # with these in tests.
-  firebase_auth_mocks: ^0.14.0
-  fake_cloud_firestore: ^3.0.3
+  # with these in tests. Bumped alongside firebase_auth/cloud_firestore
+  # above - these fakes are version-coupled to the real plugin majors.
+  firebase_auth_mocks: ^0.15.2
+  fake_cloud_firestore: ^4.2.0
 
 flutter:
   uses-material-design: true
