@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:securecity_ai/app/app.dart';
+import 'package:securecity_ai/app/routes/app_router.dart';
 import 'package:securecity_ai/core/providers/app_providers.dart';
 
 void main() {
@@ -19,6 +20,10 @@ void main() {
           sharedPreferencesProvider.overrideWithValue(prefs),
           firebaseAuthProvider.overrideWithValue(MockFirebaseAuth()),
           firestoreProvider.overrideWithValue(FakeFirebaseFirestore()),
+          // FirebaseAnalyticsObserver needs a real Firebase app, which this
+          // test never initializes (no platform channels registered) - see
+          // routeObserversProvider's doc comment in app_router.dart.
+          routeObserversProvider.overrideWithValue(const []),
         ],
         child: const SecureCityApp(),
       ),

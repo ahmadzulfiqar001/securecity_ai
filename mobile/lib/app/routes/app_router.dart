@@ -48,14 +48,24 @@ class GoRouterRefreshStream extends ChangeNotifier {
   }
 }
 
+/// Separate from [appRouterProvider] so widget tests can override it to an
+/// empty list - `FirebaseAnalyticsObserver` needs a live `FirebaseAnalytics`
+/// instance, which has no fake/mock package the way auth/Firestore do, and
+/// constructing it outside a real Firebase app throws uncaught (no `.watch`
+/// call here to wrap in try/catch).
+final routeObserversProvider = Provider<List<NavigatorObserver>>((ref) {
+  final analytics = ref.watch(firebaseAnalyticsProvider);
+  return [FirebaseAnalyticsObserver(analytics: analytics)];
+});
+
 final appRouterProvider = Provider<GoRouter>((ref) {
   final firebaseAuth = ref.watch(firebaseAuthProvider);
-  final analytics = ref.watch(firebaseAnalyticsProvider);
+  final observers = ref.watch(routeObserversProvider);
 
   return GoRouter(
     initialLocation: AppRoutes.splash,
     refreshListenable: GoRouterRefreshStream(firebaseAuth.authStateChanges()),
-    observers: [FirebaseAnalyticsObserver(analytics: analytics)],
+    observers: observers,
     redirect: (BuildContext context, GoRouterState state) {
       final user = firebaseAuth.currentUser;
       final loggedIn = user != null;
