@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers/app_providers.dart';
 import '../../../app/theme/app_colors.dart';
-import '../../../shared/widgets/loading_widget.dart';
+import '../../../app/theme/app_theme.dart';
+import '../../../core/utils/motion.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/cards/glass_card.dart';
+import '../../../shared/dialogs/app_snackbar.dart';
 import '../../../shared/dialogs/confirmation_dialog.dart';
 import '../../../shared/inputs/app_text_field.dart';
 import '../../../shared/widgets/avatar.dart';
@@ -21,15 +25,18 @@ class EmergencyContactsScreen extends ConsumerWidget {
     final contactsAsync = ref.watch(emergencyContactsStreamProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Emergency Contacts')),
+      appBar: AppBar(title: const Text('Trusted Contacts')),
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.accentCyan,
         onPressed: () => _showContactDialog(context, ref),
         child: const Icon(Icons.add, color: AppColors.primaryDeepBlue),
       ),
       body: contactsAsync.when(
-        loading: () => const LoadingWidget(),
-        error: (error, _) => ErrorState(message: 'Failed to load contacts: $error'),
+        loading: () => const SkeletonListLoader(itemCount: 3),
+        error: (error, _) => ErrorState(
+          message: "Couldn't load your trusted contacts right now.",
+          onRetry: () => ref.invalidate(emergencyContactsStreamProvider),
+        ),
         data: (contacts) {
           if (contacts.isEmpty) {
             return EmptyState(
@@ -71,7 +78,7 @@ class EmergencyContactsScreen extends ConsumerWidget {
                 ),
               );
             },
-          );
+          ).animate().fadeIn(duration: motionDuration(context, AppDurations.pageTransition)).slideY(begin: 0.1, end: 0);
         },
       ),
     );
@@ -89,7 +96,14 @@ class EmergencyContactsScreen extends ConsumerWidget {
 
     final uid = ref.read(firebaseAuthProvider).currentUser?.uid;
     if (uid == null) return;
-    await ref.read(emergencyContactsRepositoryProvider).deleteContact(uid, contactId);
+
+    final result = await ref.read(emergencyContactsRepositoryProvider).deleteContact(uid, contactId);
+    if (!context.mounted) return;
+
+    result.fold(
+      onSuccess: (_) => AppSnackbar.showSuccess(context, '$name removed from trusted contacts.'),
+      onError: (failure) => AppSnackbar.showError(context, failure.message),
+    );
   }
 
   Future<void> _showContactDialog(

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/theme/app_colors.dart';
-import '../../../shared/widgets/loading_widget.dart';
+import '../../../app/theme/app_theme.dart';
+import '../../../core/utils/motion.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/cards/glass_card.dart';
@@ -18,10 +21,13 @@ class JourneyHistoryScreen extends ConsumerWidget {
     final journeysAsync = ref.watch(journeyHistoryStreamProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Journey History')),
+      appBar: AppBar(title: const Text('Safety History')),
       body: journeysAsync.when(
-        loading: () => const LoadingWidget(),
-        error: (error, _) => ErrorState(message: 'Failed to load journey history: $error'),
+        loading: () => const SkeletonListLoader(),
+        error: (error, _) => ErrorState(
+          message: "Couldn't load your safety history right now.",
+          onRetry: () => ref.invalidate(journeyHistoryStreamProvider),
+        ),
         data: (journeys) {
           if (journeys.isEmpty) {
             return const EmptyState(
@@ -34,7 +40,7 @@ class JourneyHistoryScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(24),
             itemCount: journeys.length,
             itemBuilder: (context, index) => _JourneyTile(journey: journeys[index]),
-          );
+          ).animate().fadeIn(duration: motionDuration(context, AppDurations.pageTransition)).slideY(begin: 0.1, end: 0);
         },
       ),
     );

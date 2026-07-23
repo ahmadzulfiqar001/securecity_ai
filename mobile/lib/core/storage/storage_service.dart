@@ -83,6 +83,20 @@ class StorageService {
     return _prefs.getBool(AppConstants.prefKeyNotificationsEnabled) ?? true;
   }
 
+  // Per-category notification preferences - which alert types show up in
+  // the Notifications feed. All 5 categories are enabled by default.
+  Future<bool> saveEnabledNotificationCategories(Set<String> categories) async {
+    return await _prefs.setStringList(
+      AppConstants.prefKeyNotificationCategories,
+      categories.toList(),
+    );
+  }
+
+  Set<String> getEnabledNotificationCategories() {
+    final stored = _prefs.getStringList(AppConstants.prefKeyNotificationCategories);
+    return stored == null ? AppConstants.notificationCategoryKeys.toSet() : stored.toSet();
+  }
+
   // SOS countdown duration
   Future<bool> saveSosCountdownSeconds(int seconds) async {
     return await _prefs.setInt(AppConstants.prefKeySosCountdownSeconds, seconds);

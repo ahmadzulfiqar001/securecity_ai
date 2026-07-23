@@ -17,11 +17,15 @@ class AlertItem extends StatelessWidget {
   final String time;
   final String type;
 
+  // Kept in sync with NotificationsScreen's mapping (features/notifications)
+  // - both features share the same category taxonomy, see
+  // AppConstants.notificationCategoryKeys.
   (IconData, Color) get _style => switch (type) {
-        'flood' => (Icons.tsunami, AppColors.emergencyRed),
+        'flood' => (Icons.tsunami, AppColors.infoBlue),
         'crime' => (Icons.local_police, AppColors.emergencyOrange),
         'traffic' => (Icons.traffic, AppColors.warningAmber),
-        'weather' => (Icons.cloud_outlined, AppColors.infoBlue),
+        'weather' => (Icons.cloud_outlined, AppColors.accentCyan),
+        'emergency' => (Icons.sos_outlined, AppColors.emergencyRed),
         _ => (Icons.notifications_active_outlined, AppColors.accentCyan),
       };
 

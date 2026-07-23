@@ -27,3 +27,10 @@ final signOutProvider = Provider<Future<void> Function()>((ref) {
 final updateProfilePhotoProvider = Provider<Future<bool> Function(String)>((ref) {
   return (photoUrl) => ref.read(authNotifierProvider.notifier).updateProfilePhoto(photoUrl);
 });
+
+final updateMedicalInfoProvider =
+    Provider<Future<bool> Function({String? bloodGroup, String? medicalNotes})>((ref) {
+  return ({bloodGroup, medicalNotes}) => ref
+      .read(authNotifierProvider.notifier)
+      .updateMedicalInfo(bloodGroup: bloodGroup, medicalNotes: medicalNotes);
+});

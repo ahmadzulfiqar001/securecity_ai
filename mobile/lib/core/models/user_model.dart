@@ -17,6 +17,8 @@ class UserModel {
   final double riskScore;
   final List<double>? location; // [lng, lat]
   final List<EmergencyContactModel> emergencyContacts;
+  final String? bloodGroup;
+  final String? medicalNotes;
   final String createdAt;
   final String updatedAt;
 
@@ -33,6 +35,8 @@ class UserModel {
     required this.riskScore,
     this.location,
     required this.emergencyContacts,
+    this.bloodGroup,
+    this.medicalNotes,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -54,6 +58,8 @@ class UserModel {
               ?.map((e) => EmergencyContactModel.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
+      bloodGroup: json['bloodGroup'] as String? ?? json['blood_group'] as String?,
+      medicalNotes: json['medicalNotes'] as String? ?? json['medical_notes'] as String?,
       createdAt: json['createdAt'] as String? ?? json['created_at'] as String? ?? '',
       updatedAt: json['updatedAt'] as String? ?? json['updated_at'] as String? ?? '',
     );
@@ -73,6 +79,8 @@ class UserModel {
       'riskScore': riskScore,
       'location': location,
       'emergencyContacts': emergencyContacts.map((e) => e.toJson()).toList(),
+      'bloodGroup': bloodGroup,
+      'medicalNotes': medicalNotes,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
     };

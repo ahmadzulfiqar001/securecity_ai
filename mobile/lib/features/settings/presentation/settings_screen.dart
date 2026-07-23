@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -7,6 +8,8 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_theme.dart';
+import '../../../core/utils/motion.dart';
 import '../../../shared/buttons/emergency_button.dart';
 import '../../../shared/cards/glass_card.dart';
 import '../../../shared/widgets/section_title.dart';
@@ -21,10 +24,19 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  static const _categoryLabels = {
+    'flood': 'Flood',
+    'crime': 'Crime Nearby',
+    'traffic': 'Road Closed',
+    'weather': 'Weather',
+    'emergency': 'Emergency',
+  };
+
   late bool _notificationsEnabled;
   late bool _shakeDetectionEnabled;
   late bool _voiceActivationEnabled;
   late int _sosCountdownSeconds;
+  late Set<String> _enabledCategories;
 
   @override
   void initState() {
@@ -34,6 +46,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _shakeDetectionEnabled = storage.getShakeDetectionEnabled();
     _voiceActivationEnabled = storage.getVoiceActivationEnabled();
     _sosCountdownSeconds = storage.getSosCountdownSeconds();
+    _enabledCategories = storage.getEnabledNotificationCategories();
+  }
+
+  void _toggleCategory(String key, bool value) {
+    setState(() {
+      value ? _enabledCategories.add(key) : _enabledCategories.remove(key);
+    });
+    ref.read(storageServiceProvider).saveEnabledNotificationCategories(_enabledCategories);
   }
 
   @override
@@ -147,6 +167,31 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           const SizedBox(height: 32),
 
+          const SectionTitle(title: 'Notification Categories'),
+          const SizedBox(height: 4),
+          Text(
+            'Choose which alert categories appear in your Notifications feed.',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 12),
+          GlassCard(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                for (final key in AppConstants.notificationCategoryKeys) ...[
+                  if (key != AppConstants.notificationCategoryKeys.first) const Divider(height: 1),
+                  SwitchListTile(
+                    title: Text(_categoryLabels[key] ?? key),
+                    value: _enabledCategories.contains(key),
+                    activeThumbColor: AppColors.accentCyan,
+                    onChanged: _notificationsEnabled ? (value) => _toggleCategory(key, value) : null,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 32),
+
           const SectionTitle(title: 'Legal'),
           const SizedBox(height: 12),
           GlassCard(
@@ -180,7 +225,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             },
           ),
         ],
-      ),
+      ).animate().fadeIn(duration: motionDuration(context, AppDurations.pageTransition)).slideY(begin: 0.1, end: 0),
     );
   }
 

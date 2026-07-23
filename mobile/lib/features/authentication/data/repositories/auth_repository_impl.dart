@@ -293,6 +293,30 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  @override
+  Future<Result<UserEntity>> updateMedicalInfo({String? bloodGroup, String? medicalNotes}) async {
+    try {
+      final firebaseUser = _firebaseAuth.currentUser;
+      if (firebaseUser == null) {
+        return const Error(AuthFailure(message: 'No signed-in user.'));
+      }
+
+      final now = DateTime.now().toUtc().toIso8601String();
+      await _usersCollection.doc(firebaseUser.uid).update({
+        'bloodGroup': bloodGroup,
+        'medicalNotes': medicalNotes,
+        'updatedAt': now,
+      });
+
+      final snapshot = await _usersCollection.doc(firebaseUser.uid).get();
+      final userModel = UserModel.fromJson(snapshot.data()!);
+      await _storageService.saveUser(userModel);
+      return Success(_mapToEntity(userModel));
+    } catch (e) {
+      return Error(UnknownFailure(cause: e));
+    }
+  }
+
   UserEntity _mapToEntity(UserModel model) {
     return UserEntity(
       id: model.id,
@@ -314,6 +338,8 @@ class AuthRepositoryImpl implements AuthRepository {
                 relationship: e.relationship,
               ))
           .toList(),
+      bloodGroup: model.bloodGroup,
+      medicalNotes: model.medicalNotes,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
     );

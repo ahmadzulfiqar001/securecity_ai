@@ -21,6 +21,7 @@ abstract final class AppRoutes {
   static const String settings = '/settings';
   static const String emergencyContacts = '/emergency-contacts';
   static const String journeyHistory = '/journey-history';
+  static const String medicalInfo = '/medical-info';
   static const String services = '/services';
   static const String areaSafety = '/area-safety';
 }

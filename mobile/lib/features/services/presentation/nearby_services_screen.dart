@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/providers/app_providers.dart';
 import '../../../app/theme/app_colors.dart';
-import '../../../shared/widgets/loading_widget.dart';
+import '../../../app/theme/app_theme.dart';
+import '../../../core/utils/motion.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/cards/glass_card.dart';
@@ -55,8 +58,11 @@ class _NearbyServicesScreenState extends ConsumerState<NearbyServicesScreen> {
           ),
           Expanded(
             child: servicesAsync.when(
-              loading: () => const LoadingWidget(),
-              error: (error, _) => ErrorState(message: 'Failed to load nearby services: $error'),
+              loading: () => const SkeletonListLoader(),
+              error: (error, _) => ErrorState(
+                message: "Couldn't load nearby services right now.",
+                onRetry: () => ref.invalidate(nearbyServicesStreamProvider),
+              ),
               data: (services) {
                 final position = positionAsync.value;
                 var filtered = _selectedType == null
@@ -88,7 +94,7 @@ class _NearbyServicesScreenState extends ConsumerState<NearbyServicesScreen> {
                   padding: const EdgeInsets.all(24),
                   itemCount: filtered.length,
                   itemBuilder: (context, index) => _ServiceTile(service: filtered[index]),
-                );
+                ).animate().fadeIn(duration: motionDuration(context, AppDurations.pageTransition)).slideY(begin: 0.1, end: 0);
               },
             ),
           ),

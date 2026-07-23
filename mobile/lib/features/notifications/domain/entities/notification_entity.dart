@@ -2,7 +2,7 @@ class NotificationEntity {
   final String id;
   final String title;
   final String body;
-  final String type; // 'disaster' | 'crime' | 'traffic' | 'general'
+  final String type; // 'flood' | 'crime' | 'traffic' | 'weather' | 'emergency'
   final bool isRead;
   final DateTime createdAt;
 

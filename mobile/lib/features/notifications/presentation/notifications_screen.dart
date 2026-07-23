@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../app/theme/app_colors.dart';
-import '../../../shared/widgets/loading_widget.dart';
+import '../../../app/theme/app_theme.dart';
+import '../../../core/utils/motion.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/cards/glass_card.dart';
@@ -33,6 +37,7 @@ class NotificationsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notificationsAsync = ref.watch(notificationsStreamProvider);
+    final enabledCategories = ref.read(storageServiceProvider).getEnabledNotificationCategories();
 
     return Scaffold(
       appBar: AppBar(
@@ -46,26 +51,39 @@ class NotificationsScreen extends ConsumerWidget {
         ],
       ),
       body: notificationsAsync.when(
-        loading: () => const LoadingWidget(),
-        error: (error, _) => ErrorState(message: 'Failed to load notifications: $error'),
+        loading: () => const SkeletonListLoader(),
+        error: (error, _) => ErrorState(
+          message: "Couldn't load your notifications right now.",
+          onRetry: () => ref.invalidate(notificationsStreamProvider),
+        ),
         data: (notifications) {
-          if (notifications.isEmpty) {
-            return const EmptyState(
+          // Categories the user turned off in Settings > Notification
+          // Categories are hidden here rather than un-fetched - there's no
+          // server-side delivery to filter (see NotificationsRepository),
+          // so this is a client-side feed filter, not a push subscription.
+          final visible = notifications
+              .where((n) => !AppConstants.notificationCategoryKeys.contains(n.type) || enabledCategories.contains(n.type))
+              .toList();
+
+          if (visible.isEmpty) {
+            return EmptyState(
               icon: Icons.notifications_none_outlined,
-              message: 'No new alerts or warnings.',
+              message: notifications.isEmpty
+                  ? 'No new alerts or warnings.'
+                  : 'Nothing to show - all your enabled categories are caught up. Check Settings > Notification Categories.',
             );
           }
           return ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            itemCount: notifications.length,
+            itemCount: visible.length,
             itemBuilder: (context, index) {
-              final notif = notifications[index];
+              final notif = visible[index];
               return _NotificationTile(
                 notification: notif,
                 onTap: () => _markAsRead(ref, notif.id),
               );
             },
-          );
+          ).animate().fadeIn(duration: motionDuration(context, AppDurations.pageTransition)).slideY(begin: 0.1, end: 0);
         },
       ),
     );
@@ -78,10 +96,14 @@ class _NotificationTile extends StatelessWidget {
   final NotificationEntity notification;
   final VoidCallback onTap;
 
+  // Kept in sync with AlertItem's mapping (features/home) - both features
+  // share the same category taxonomy, see AppConstants.notificationCategoryKeys.
   (IconData, Color) get _style => switch (notification.type) {
-        'disaster' => (Icons.warning_amber, AppColors.emergencyRed),
-        'crime' => (Icons.policy, AppColors.emergencyOrange),
+        'flood' => (Icons.tsunami, AppColors.infoBlue),
+        'crime' => (Icons.local_police, AppColors.emergencyOrange),
         'traffic' => (Icons.traffic, AppColors.warningAmber),
+        'weather' => (Icons.cloud_outlined, AppColors.accentCyan),
+        'emergency' => (Icons.sos_outlined, AppColors.emergencyRed),
         _ => (Icons.notifications, AppColors.accentCyan),
       };
 

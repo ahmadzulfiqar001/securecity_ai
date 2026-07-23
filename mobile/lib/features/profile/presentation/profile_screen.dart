@@ -1,15 +1,18 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/app_typography.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../core/providers/session_providers.dart';
+import '../../../core/utils/motion.dart';
 import '../../../shared/buttons/emergency_button.dart';
 import '../../../shared/dialogs/app_snackbar.dart';
 import '../../../shared/widgets/avatar.dart';
@@ -131,12 +134,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               Text(user?.email ?? '', style: AppTypography.darkBodyMedium),
               const SizedBox(height: 48),
               ProfileMenuItem(
-                title: 'Emergency Contacts',
+                title: 'Medical Info',
+                icon: Icons.medical_information_outlined,
+                onTap: () => context.push(AppRoutes.medicalInfo),
+              ),
+              ProfileMenuItem(
+                title: 'Trusted Contacts',
                 icon: Icons.contact_phone_outlined,
                 onTap: () => context.push(AppRoutes.emergencyContacts),
               ),
               ProfileMenuItem(
-                title: 'Journey History',
+                title: 'Safety History',
                 icon: Icons.history,
                 onTap: () => context.push(AppRoutes.journeyHistory),
               ),
@@ -157,7 +165,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 },
               ),
             ],
-          ),
+          ).animate().fadeIn(duration: motionDuration(context, AppDurations.pageTransition)).slideY(begin: 0.1, end: 0),
         ),
       ),
     );

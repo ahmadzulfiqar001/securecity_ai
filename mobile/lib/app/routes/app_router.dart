@@ -22,6 +22,7 @@ import '../../features/chat/presentation/chatbot_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/incident/presentation/report_incident_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
+import '../../features/profile/presentation/medical_info_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/emergency_contacts/presentation/emergency_contacts_screen.dart';
 import '../../features/journey_history/presentation/journey_history_screen.dart';
@@ -220,6 +221,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'settings',
         builder: (BuildContext context, GoRouterState state) {
           return const SettingsScreen();
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.medicalInfo,
+        name: 'medicalInfo',
+        builder: (BuildContext context, GoRouterState state) {
+          return const MedicalInfoScreen();
         },
       ),
       GoRoute(

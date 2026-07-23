@@ -18,6 +18,8 @@ class UserEntity {
   final double riskScore;
   final List<double>? location;
   final List<EmergencyContactEntity> emergencyContacts;
+  final String? bloodGroup;
+  final String? medicalNotes;
   final String createdAt;
   final String updatedAt;
 
@@ -34,6 +36,8 @@ class UserEntity {
     required this.riskScore,
     this.location,
     required this.emergencyContacts,
+    this.bloodGroup,
+    this.medicalNotes,
     required this.createdAt,
     required this.updatedAt,
   });

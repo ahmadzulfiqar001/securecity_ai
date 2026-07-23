@@ -164,6 +164,26 @@ class AuthNotifier extends StateNotifier<AuthState> {
     return success;
   }
 
+  Future<bool> updateMedicalInfo({String? bloodGroup, String? medicalNotes}) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    final result = await _authRepository.updateMedicalInfo(
+      bloodGroup: bloodGroup,
+      medicalNotes: medicalNotes,
+    );
+
+    bool success = false;
+    result.fold(
+      onSuccess: (user) {
+        state = state.copyWith(isLoading: false, user: user);
+        success = true;
+      },
+      onError: (failure) {
+        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+      },
+    );
+    return success;
+  }
+
   Future<void> logout() async {
     state = state.copyWith(isLoading: true);
     await _authRepository.signOut();

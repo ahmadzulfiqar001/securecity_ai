@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../app/theme/app_colors.dart';
-import '../../../shared/widgets/loading_widget.dart';
+import '../../../app/theme/app_theme.dart';
+import '../../../core/utils/motion.dart';
+import '../../../shared/widgets/skeleton_loader.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_state.dart';
 import '../../../shared/cards/glass_card.dart';
@@ -23,8 +26,11 @@ class AreaSafetyScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Area Safety')),
       body: zonesAsync.when(
-        loading: () => const LoadingWidget(),
-        error: (error, _) => ErrorState(message: 'Failed to load area safety data: $error'),
+        loading: () => const SkeletonListLoader(),
+        error: (error, _) => ErrorState(
+          message: "Couldn't load area safety data right now.",
+          onRetry: () => ref.invalidate(areaSafetyStreamProvider),
+        ),
         data: (zones) {
           if (zones.isEmpty) {
             return const EmptyState(
@@ -54,7 +60,7 @@ class AreaSafetyScreen extends ConsumerWidget {
           return Padding(
             padding: const EdgeInsets.all(24),
             child: _AreaSafetyCard(zone: nearest),
-          );
+          ).animate().fadeIn(duration: motionDuration(context, AppDurations.pageTransition)).slideY(begin: 0.1, end: 0);
         },
       ),
     );

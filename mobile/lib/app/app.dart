@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/providers/app_providers.dart';
 import '../features/settings/presentation/providers/theme_provider.dart';
+import '../shared/widgets/offline_banner.dart';
 import 'routes/app_router.dart';
 import 'theme/app_colors.dart';
 import 'theme/app_theme.dart';
@@ -71,6 +72,12 @@ class SecureCityApp extends ConsumerWidget {
       darkTheme: AppTheme.darkTheme,
       theme: AppTheme.lightTheme,
       routerConfig: ref.watch(appRouterProvider),
+      builder: (context, child) => Column(
+        children: [
+          const OfflineBanner(),
+          Expanded(child: child ?? const SizedBox.shrink()),
+        ],
+      ),
     );
   }
 }

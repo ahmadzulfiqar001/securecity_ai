@@ -35,4 +35,9 @@ abstract class AuthRepository {
   /// `users/profile_images/{uid}/...` in Storage) and returns the refreshed
   /// [UserEntity].
   Future<Result<UserEntity>> updateProfilePhoto(String photoUrl);
+
+  /// Updates the signed-in user's self-reported medical fields in
+  /// Firestore and returns the refreshed [UserEntity]. Pass `null` for a
+  /// field to clear it.
+  Future<Result<UserEntity>> updateMedicalInfo({String? bloodGroup, String? medicalNotes});
 }

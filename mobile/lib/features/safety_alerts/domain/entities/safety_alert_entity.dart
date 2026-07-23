@@ -7,7 +7,7 @@ class SafetyAlertEntity {
   final String id;
   final String title;
   final String body;
-  final String type; // 'flood' | 'crime' | 'traffic' | 'weather' | 'general'
+  final String type; // 'flood' | 'crime' | 'traffic' | 'weather' | 'emergency'
   final String severity; // 'low' | 'medium' | 'high' | 'critical'
   final DateTime createdAt;
 

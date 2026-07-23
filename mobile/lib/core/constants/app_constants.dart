@@ -31,6 +31,17 @@ abstract final class AppConstants {
   static const String colUserActivity = 'user_activity';
   static const String colWeatherData = 'weather_data';
 
+  // Shared by NotificationEntity.type and SafetyAlertEntity.type - the
+  // Notifications feed and the Home screen's broadcast alerts use the same
+  // category taxonomy.
+  static const List<String> notificationCategoryKeys = [
+    'flood',
+    'crime',
+    'traffic',
+    'weather',
+    'emergency',
+  ];
+
   // Firebase Storage Buckets / Paths
   static const String storageIncidentMedia = 'incidents/media';
   static const String storageProfileImages = 'users/profile_images';
@@ -60,6 +71,7 @@ abstract final class AppConstants {
   static const String prefKeyVoiceActivationEnabled = 'voice_activation_enabled';
   static const String prefKeySosCountdownSeconds = 'sos_countdown_seconds';
   static const String prefKeyNotificationsEnabled = 'notifications_enabled';
+  static const String prefKeyNotificationCategories = 'notification_categories';
 
   // ─────────────────────────────────────────────────────────────────────────
   // Map Configuration
